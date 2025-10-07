@@ -73,7 +73,7 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
   };
 
   const handleInstallVscClick = () => {
-    window.open('vscode:extension/visual-editor-ai.visual-editor-ai', '_blank');
+    window.open('https://marketplace.visualstudio.com/items?itemName=VisualEditor.visual-editor-ai', '_blank');
   };
 
   const handleRecheck = () => {

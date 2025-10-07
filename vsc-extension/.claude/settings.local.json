@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir:*)",
+      "Read(//c/Users/zafer/Desktop/visualeditor/chrome-extension/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
