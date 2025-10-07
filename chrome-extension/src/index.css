@@ -1,0 +1,13 @@
+/* Import panel styles */
+@import './styles/panel.css';
+
+/* Import overlay styles */
+@import './styles/overlays.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+}

@@ -1,0 +1,94 @@
+/* ===== Element Highlight Overlays ===== */
+
+.ave-element-overlay {
+  position: absolute;
+  pointer-events: none;
+  z-index: 999998;
+}
+
+.ave-hover-overlay {
+  border: 1px solid #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.ave-selected-overlay {
+  border: 2px solid #3b82f6;
+  background: rgba(59, 130, 246, 0.15);
+}
+
+.ave-parent-preview-overlay {
+  border: 1px dashed #10b981;
+  background: rgba(16, 185, 129, 0.08);
+  z-index: 999997;
+}
+
+/* Overlay Labels */
+.ave-overlay-label {
+  position: absolute;
+  top: 0;
+  left: -1px;
+  transform: translateY(-100%);
+  padding: 4px 8px;
+  background: rgba(59, 130, 246, 0.95);
+  backdrop-filter: blur(8px);
+  color: white;
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Monaco, monospace;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.4;
+  border-radius: 4px 4px 0 0;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 -2px 8px rgba(59, 130, 246, 0.2);
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ave-overlay-label.ave-label-bottom {
+  top: auto;
+  bottom: 0;
+  transform: translateY(100%);
+  border-radius: 0 0 4px 4px;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+}
+
+.ave-label-text {
+  display: inline-block;
+}
+
+.ave-label-parent-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1px;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  border-radius: 3px;
+  color: white;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: all 0.2s;
+}
+
+.ave-label-parent-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.1);
+}
+
+.ave-label-parent-btn svg {
+  display: block;
+}
+
+.ave-selected-overlay .ave-overlay-label {
+  left: -2px;
+  background: rgba(37, 99, 235, 0.95);
+  font-weight: 600;
+  box-shadow: 0 -2px 12px rgba(37, 99, 235, 0.3);
+  pointer-events: auto;
+}
+
+.ave-selected-overlay .ave-overlay-label.ave-label-bottom {
+  box-shadow: 0 2px 12px rgba(37, 99, 235, 0.3);
+}

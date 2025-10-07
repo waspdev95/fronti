@@ -1,0 +1,63 @@
+{
+  "name": "visual-editor-ai",
+  "displayName": "Visual Editor AI",
+  "description": "AI visual editor for local development. Works with Chrome extension to design and code your projects.",
+  "version": "1.0.0",
+  "publisher": "visual-editor-ai",
+  "icon": "resources/icon.png",
+  "engines": {
+    "vscode": "^1.104.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished",
+    "onView:visualEditorAI.chromeExtension"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "visualEditorAI",
+          "title": "Visual Editor AI",
+          "icon": "resources/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "visualEditorAI": [
+        {
+          "id": "visualEditorAI.chromeExtension",
+          "name": "Getting Started",
+          "type": "webview"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.19",
+    "@types/vscode": "^1.104.0",
+    "@vscode/vsce": "^2.32.0",
+    "typescript": "^5.9.3"
+  },
+  "keywords": [
+    "ai",
+    "visual editor",
+    "web design",
+    "chrome extension",
+    "bolt",
+    "v0"
+  ],
+  "author": "Visual Editor AI Team",
+  "license": "MIT",
+  "type": "commonjs"
+}

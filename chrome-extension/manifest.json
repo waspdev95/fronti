@@ -1,0 +1,50 @@
+{
+  "manifest_version": 3,
+  "name": "Visual Editor AI",
+  "version": "1.0.0",
+  "description": "AI visual editor for local development - design and code your projects with AI",
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
+  "permissions": [
+    "activeTab",
+    "nativeMessaging",
+    "storage",
+    "scripting"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "action": {
+    "default_title": "Open Visual Editor AI"
+  },
+  "commands": {
+    "toggle-editor": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+K",
+        "mac": "Command+Shift+K"
+      },
+      "description": "Open Visual Editor AI"
+    }
+  },
+  "background": {
+    "service_worker": "src/background.ts",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/iframe-bridge.ts"],
+      "run_at": "document_idle",
+      "all_frames": true
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["editor.html", "assets/*.js", "assets/*.css"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
