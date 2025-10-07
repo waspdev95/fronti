@@ -2,7 +2,7 @@
   "name": "visual-editor-ai",
   "displayName": "Visual Editor AI",
   "description": "AI visual editor for local development. Works with Chrome extension to design and code your projects.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publisher": "VisualEditor",
   "icon": "resources/icon.png",
   "engines": {

@@ -9,13 +9,8 @@
     "128": "icon128.png"
   },
   "permissions": [
-    "activeTab",
     "nativeMessaging",
-    "storage",
-    "scripting"
-  ],
-  "host_permissions": [
-    "<all_urls>"
+    "storage"
   ],
   "action": {
     "default_title": "Open Visual Editor AI"

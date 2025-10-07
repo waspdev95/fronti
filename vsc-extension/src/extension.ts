@@ -102,7 +102,7 @@ function createManifest(nativeHostPath: string, platform: string): any {
     path: hostExecutable,
     type: 'stdio',
     allowed_origins: [
-      'chrome-extension://fjidllehmalodkbffegpihbcfolplneg/'
+      'chrome-extension://jojjbmgmggenijlkhjeaiodfoggjcjgj/'
     ]
   };
 }
