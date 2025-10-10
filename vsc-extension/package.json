@@ -1,15 +1,16 @@
 {
   "name": "visual-editor-ai",
-  "displayName": "Visual Editor AI",
-  "description": "AI visual editor for local development. Works with Chrome extension to design and code your projects.",
-  "version": "1.0.1",
+  "displayName": "Visual Editor - Visual-first AI coding agent",
+  "description": "Visual-first AI coding agent for local codebases. Select elements in browser, describe changes, agent applies edits.",
+  "version": "1.0.2",
   "publisher": "VisualEditor",
   "icon": "resources/icon.png",
   "engines": {
     "vscode": "^1.104.0"
   },
   "categories": [
-    "Other"
+    "Programming Languages",
+    "Machine Learning"
   ],
   "activationEvents": [
     "onStartupFinished"
@@ -50,11 +51,21 @@
   },
   "keywords": [
     "ai",
+    "coding",
+    "agent",
+    "radix ui",
+    "styled components",
+    "frontend",
     "visual editor",
-    "web design",
-    "chrome extension",
-    "bolt",
-    "v0"
+    "react",
+    "nextjs",
+    "vue",
+    "tailwind",
+    "css",
+    "html",
+    "typescript",
+    "javascript"
+    
   ],
   "author": "Visual Editor AI Team",
   "license": "MIT",

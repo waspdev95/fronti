@@ -1,39 +1,39 @@
 # Visual Editor AI
 
-AI visual editor for local development - design and code with AI.
+**Visual-first AI coding agent for local codebases**
 
-## What is it?
+Visual editing for local codebases using Claude Code agent. Open project in VS Code, run dev server, select elements in [Chrome extension](https://chromewebstore.google.com/detail/visual-editor-ai/jojjbmgmggenijlkhjeaiodfoggjcjgj), **describe changes** and AI agent handles coding.
 
-Works with **Visual Editor AI Chrome Extension** to edit your localhost projects with AI. Like v0.dev but for your existing local codebase.
+---
 
-## How it works
+## Visual layer for Claude Code
+
+Transform terminal coding into visual workflow. Select UI elements in browser and let AI agent edit code automatically. Clean interface for existing codebases.
+
+---
+
+## Why Visual Editor AI?
+
+**Visual workflow** — Select UI elements in browser, describe changes, AI coding agent handles coding automatically.
+
+**Built for frontend** — Powerful for React, Next.js, Vue, Tailwind projects. Works with any web codebase.
+
+**10x faster coding** — AI-powered visual selection replaces standard AI agents.
+Clean, faster workflow.
+
+---
+
+## How to Use
 
 1. Install this VS Code extension
-2. Install Visual Editor AI Chrome extension
-3. Open your project in VS Code
-4. Run your dev server (localhost:3000, etc.)
-5. Use Chrome extension to visually edit with AI
+2. Install [Chrome extension](https://chromewebstore.google.com/detail/visual-editor-ai/jojjbmgmggenijlkhjeaiodfoggjcjgj)
+3. Run dev server (e.g., `localhost:3000`)
+4. Open browser extension
+5. Select element → Describe change → AI agent applies coding changes
 
-## Features
-
-- Automatic workspace detection
-- Chrome extension status monitoring
-- One-click setup
-
-## Usage
-
-1. Open project folder in VS Code
-2. Start your dev server
-3. Open localhost in Chrome
-4. Click Visual Editor AI icon
-5. Select elements and describe changes
+---
 
 ## Requirements
 
-- Chrome browser
-- Visual Editor AI Chrome extension
-- Claude CLI installed
-
-## License
-
-MIT
+- [Chrome extension](https://chromewebstore.google.com/detail/visual-editor-ai/jojjbmgmggenijlkhjeaiodfoggjcjgj)
+- Claude Code installed and authenticated
