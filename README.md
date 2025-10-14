@@ -1,8 +1,11 @@
-# Fronti - Visual-first AI coding agent
+# Fronti - Visual Layer for Claude Code
 
-> Like v0, Bolt, and Lovable - but for your existing local projects. Local and under your control.
+Fronti brings Claude Code's powerful agent capabilities into your browser. Point it at any localhost project, select the element you want to change, describe what you need, and Claude updates your codebase instantly.
 
-Click any element in the browser -> describe the change -> Fronti routes it through Claude Code -> your source updates automatically.
+- Visual interface for Claude Code running on your localhost
+- Works with React, Next.js, Vue, Tailwind, Astro, Svelte, and any web stack
+- Handles UI changes, refactors, API integrations, logic updates, and test generation
+- Perfect for rapid prototyping and production refinements
 
 [![Chrome Web Store](https://img.shields.io/chrome-web-store/v/jojjbmgmggenijlkhjeaiodfoggjcjgj?label=Chrome%20Extension)](https://chromewebstore.google.com/detail/visual-editor-ai/jojjbmgmggenijlkhjeaiodfoggjcjgj)
 [![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/VisualEditor.visual-editor-ai?label=VS%20Code%20Extension)](https://marketplace.visualstudio.com/items?itemName=VisualEditor.visual-editor-ai)
@@ -14,45 +17,68 @@ Click any element in the browser -> describe the change -> Fronti routes it thro
 ## Quick start
 
 1. Install Claude Code CLI  
-   `npm install -g @anthropic-ai/claude-code`  
-   Run the login command and connect your Anthropic account.
-2. Install both Fronti extensions
-   - Chrome: [Fronti AI](https://chromewebstore.google.com/detail/visual-editor-ai/jojjbmgmggenijlkhjeaiodfoggjcjgj)
-   - VS Code: [Fronti AI](https://marketplace.visualstudio.com/items?itemName=VisualEditor.visual-editor-ai)
-3. Prepare your workspace
-   - Open the project in VS Code.
-   - Start your local development server (for example `npm run dev` -> `http://localhost:3000`).
-4. Edit visually
-   - Open the Fronti Chrome extension, point it to your localhost URL, click the element to adjust, describe the change, and review the edit in VS Code.
+   `npm install -g @anthropic-ai/claude-code`
+2. Install Fronti extensions
+   - Chrome: [Fronti Chrome Extension](https://chromewebstore.google.com/detail/visual-editor-ai/jojjbmgmggenijlkhjeaiodfoggjcjgj)
+   - VS Code: [Fronti Visual Studio Extension](https://marketplace.visualstudio.com/items?itemName=VisualEditor.visual-editor-ai)
+3. Prepare your project
+   - Open the repo in VS Code.
+   - Start your local development server (for example `npm run dev` -> `http://localhost:3000` or `5173`).
+4. Run Claude from the canvas
+   - Launch the Chrome extension, pick an element or section, describe the improvement, and let Claude Code apply and sync the changes.
 
 ---
 
-## How Fronti works
+## What you can do
 
-- The Chrome extension captures visual context from your running app.
-- The VS Code extension bridges Fronti requests into the Claude Code CLI.
-- Claude Code applies AI-powered edits locally, so you approve every change before committing.
+- Redesign components, restyle layouts, and update content directly from your browser
+- Refactor logic, connect APIs, adjust data flows, and generate tests using Claude's agent capabilities
+- Create new sections and reusable components with production-ready code
+- Apply batch improvements like accessibility fixes, theme updates, or design token changes across your entire project
+- See changes instantly with your existing dev server and hot reload
 
 ---
 
 ## Why Fronti?
 
-| Capability | v0 / Bolt / Lovable | Fronti |
+Get the speed of hosted AI tools with complete control over your codebase.
+
+| Feature | Hosted AI Builders | Fronti |
 | --- | --- | --- |
-| Works with existing local codebases | No | Yes |
-| Keeps code and prompts on your machine | No | Yes |
-| Visual click-to-edit workflow | No | Yes |
+| Works with your existing codebase | No | Yes |
+| Code stays on your machine | No | Yes |
+| Visual click-to-edit interface | Limited | Yes |
+| Full agent capabilities | No | Yes |
+
+---
+
+## How it works
+
+- The Chrome extension provides a visual interface over your localhost dev server
+- The VS Code extension connects your selections to Claude Code CLI running in your editor
+- Claude executes changes locally in your codebase
+
+---
+
+## Built for web development
+
+- Turn visual feedback into code changes in minutes
+- Works with any framework or design system
+- Everything runs locally on your machine
 
 ---
 
 ## Requirements
 
-- Node.js 18 or newer.
-- Visual Studio Code with the Claude Code CLI (`npm install -g @anthropic-ai/claude-code`) available on your PATH.
-- Google Chrome or another Chromium-based browser that can install from the Chrome Web Store.
-- A local development server for your project (React, Next.js, Vue, Vite, Astro, etc.).
+- Node.js 18 or newer
+- Visual Studio Code
+- Claude Code CLI (`npm install -g @anthropic-ai/claude-code`)
+- Fronti VS Code Extension
+- Fronti Chrome Extension
+- Chromium-based browser (Chrome, Edge, Arc, etc.)
+- Local dev server running your project
 
-Fronti does not store API keys. All AI calls run locally through Claude Code, which requires an active Anthropic subscription.
+All Claude requests run through Claude Code CLI, which requires an active Anthropic subscription.
 
 ---
 
