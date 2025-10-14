@@ -16,18 +16,18 @@ Select elements in browser → Describe changes → AI agent handles coding ✨
 ## ✨ Features
 
 ⚡ **Visual-first** — Select UI elements in browser, AI codes automatically
-🏠 **Local & Private** — Runs on your machine, your code stays yours
-🔥 **Built for Frontend** — React, Next.js, Vue, Tailwind - any web framework
-🚀 **10x Faster** — Visual selection replaces manual code navigation
-🔑 **Bring Your Own API** — Use your Claude API key, no lock-in
+
+💻 **Local Development** — Works with your existing local projects
+
+🔑 **Uses Claude Code** — Powered by Claude's official VS Code agent
 
 ---
 
 ## 🚀 Quick Start
 
-**1. Install Extensions**
-- [📦 Chrome Extension](https://chromewebstore.google.com/detail/visual-editor-ai/jojjbmgmggenijlkhjeaiodfoggjcjgj) — Visual element selector
-- [📦 VS Code Extension](https://marketplace.visualstudio.com/items?itemName=VisualEditor.visual-editor-ai) — Native host bridge
+**1. Install Both Extensions** (both required to work)
+- [📦 Chrome Extension](https://chromewebstore.google.com/detail/visual-editor-ai/jojjbmgmggenijlkhjeaiodfoggjcjgj)
+- [📦 VS Code Extension](https://marketplace.visualstudio.com/items?itemName=VisualEditor.visual-editor-ai)
 
 **2. Use It**
 1. Open your project in VS Code
@@ -41,10 +41,10 @@ Select elements in browser → Describe changes → AI agent handles coding ✨
 
 This monorepo contains both extensions needed to run Fronti:
 
-- **`/chrome-extension`** — Visual element selector with AI chat interface
-- **`/vsc-extension`** — Native host bridge for file operations with Claude Code
+- **`/chrome-extension`** — Visual AI coding agent interface
+- **`/vsc-extension`** — VS Code integration for Claude Code
 
-Both work together to enable visual-first AI coding.
+Both extensions must be installed and work together.
 
 ---
 
