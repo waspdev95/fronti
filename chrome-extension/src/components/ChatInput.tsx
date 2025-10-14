@@ -356,15 +356,13 @@ Task: ${augmentedCommand}`;
                   {placeholder.position === 'top' ? 'Add an element above' :
                    placeholder.position === 'bottom' ? 'Add an element below' :
                    placeholder.position === 'left' ? 'Add an element to the left of' :
-                   'Add an element to the right of'}
+                   'Add an element to the right of'}{' '}
+                  {getElementDisplayText(placeholder.relativeToElement)}
                 </span>
-              </div>
-              <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700">
-                <span>{getElementDisplayText(placeholder.relativeToElement)}</span>
                 <button
                   type="button"
                   onClick={() => clearPlaceholder()}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  className="text-blue-400 hover:text-blue-600 transition-colors"
                 >
                   ×
                 </button>

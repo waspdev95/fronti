@@ -23,6 +23,7 @@ interface ElementInfo {
  * Manages extension lifecycle (message-based mode for iframe)
  */
 export class ExtensionManager {
+  private static rootInstance: ReactDOM.Root | null = null;
   private root: ReactDOM.Root;
   private enabled: boolean = false;
   private iframe: HTMLIFrameElement;
@@ -38,18 +39,22 @@ export class ExtensionManager {
   private rafId: number | null = null;
 
   constructor(panelRoot: HTMLElement, iframe: HTMLIFrameElement, autoEnable: boolean = false) {
-    this.root = ReactDOM.createRoot(panelRoot);
+    // Reuse existing root to prevent chat panel re-mounting on iframe reload
+    if (!ExtensionManager.rootInstance) {
+      ExtensionManager.rootInstance = ReactDOM.createRoot(panelRoot);
+    }
+    this.root = ExtensionManager.rootInstance;
     this.iframe = iframe;
     this.addButtons = new Map();
 
-    // Create hover overlay
+    // Create hover overlay (no parent button, simpler)
     this.hoverOverlay = document.createElement('div');
     this.hoverOverlay.className = 'ave-element-overlay ave-hover-overlay';
     this.hoverOverlay.style.display = 'none';
     document.body.appendChild(this.hoverOverlay);
 
     this.hoverLabel = document.createElement('div');
-    this.hoverLabel.className = 'ave-overlay-label';
+    this.hoverLabel.className = 'ave-overlay-label ave-hover-label';
     this.hoverLabel.innerHTML = `
       <span class="ave-label-text-hover"></span>
     `;
@@ -61,17 +66,28 @@ export class ExtensionManager {
     this.selectedOverlay.style.display = 'none';
     document.body.appendChild(this.selectedOverlay);
 
+    // Create label wrapper to hold both label and parent button
+    const labelWrapper = document.createElement('div');
+    labelWrapper.className = 'ave-label-wrapper';
+    this.selectedOverlay.appendChild(labelWrapper);
+
     this.selectedLabel = document.createElement('div');
     this.selectedLabel.className = 'ave-overlay-label';
     this.selectedLabel.innerHTML = `
       <span class="ave-label-text"></span>
-      <button class="ave-label-parent-btn" title="Select parent element">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="18 15 12 9 6 15"></polyline>
-        </svg>
-      </button>
     `;
-    this.selectedOverlay.appendChild(this.selectedLabel);
+    labelWrapper.appendChild(this.selectedLabel);
+
+    // Create parent button as separate element
+    const parentBtn = document.createElement('button');
+    parentBtn.className = 'ave-label-parent-btn';
+    parentBtn.title = 'Select parent element';
+    parentBtn.innerHTML = `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="18 15 12 9 6 15"></polyline>
+      </svg>
+    `;
+    labelWrapper.appendChild(parentBtn);
 
     // Create add element buttons
     const addBtnTop = document.createElement('button');
@@ -113,7 +129,6 @@ export class ExtensionManager {
     document.body.appendChild(this.parentPreviewOverlay);
 
     // Setup parent button handlers
-    const parentBtn = this.selectedLabel.querySelector('.ave-label-parent-btn') as HTMLButtonElement;
     if (parentBtn) {
       parentBtn.addEventListener('click', this.handleParentButtonClick);
       parentBtn.addEventListener('mouseenter', this.handleParentButtonHover);
@@ -451,27 +466,43 @@ export class ExtensionManager {
     overlay.style.width = `${element.rect.width}px`;
     overlay.style.height = `${element.rect.height}px`;
 
-    // Position label at bottom if not enough space at top
-    const label = overlay.querySelector('.ave-overlay-label') as HTMLElement;
-    if (label) {
-      const LABEL_HEIGHT = 30;
-      const hasSpaceAtTop = element.rect.top >= LABEL_HEIGHT;
+    const LABEL_HEIGHT = 30;
+    const hasSpaceAtTop = element.rect.top >= LABEL_HEIGHT;
 
+    // Position label wrapper at bottom if not enough space at top (for selected overlay)
+    const labelWrapper = overlay.querySelector('.ave-label-wrapper') as HTMLElement;
+    if (labelWrapper) {
       if (hasSpaceAtTop) {
-        label.classList.remove('ave-label-bottom');
+        labelWrapper.classList.remove('ave-label-bottom');
       } else {
-        label.classList.add('ave-label-bottom');
+        labelWrapper.classList.add('ave-label-bottom');
+      }
+    }
+
+    // Position hover label at bottom if not enough space at top (for hover overlay)
+    const hoverLabel = overlay.querySelector('.ave-hover-label') as HTMLElement;
+    if (hoverLabel) {
+      if (hasSpaceAtTop) {
+        hoverLabel.classList.remove('ave-label-bottom');
+      } else {
+        hoverLabel.classList.add('ave-label-bottom');
       }
     }
   }
 
   /**
-   * Handle add button click - set placeholder position
+   * Handle add button click - toggle placeholder position
    */
   private handleAddButtonClick = (position: 'top' | 'right' | 'bottom' | 'left') => {
     const store = useAppStore.getState();
 
     if (!this.currentSelectedPath || store.selectedElements.length === 0) return;
+
+    // If clicking the same button that's already active, deactivate it
+    if (store.placeholder && store.placeholder.position === position) {
+      store.clearPlaceholder();
+      return;
+    }
 
     const selectedElement = store.selectedElements[store.selectedElements.length - 1];
 

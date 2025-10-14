@@ -22,12 +22,30 @@
   z-index: 999997;
 }
 
-/* Overlay Labels */
-.ave-overlay-label {
+/* Label Wrapper - holds label and parent button */
+.ave-label-wrapper {
   position: absolute;
   top: 0;
   left: -1px;
   transform: translateY(-100%);
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  pointer-events: none;
+}
+
+.ave-label-wrapper.ave-label-bottom {
+  top: auto;
+  bottom: 0;
+  transform: translateY(100%);
+}
+
+.ave-selected-overlay .ave-label-wrapper {
+  left: -2px;
+}
+
+/* Overlay Labels */
+.ave-overlay-label {
   padding: 4px 8px;
   background: rgba(59, 130, 246, 0.95);
   backdrop-filter: blur(8px);
@@ -37,22 +55,40 @@
   font-weight: 500;
   line-height: 1.4;
   height: 23px;
-  border-radius: 4px 4px 0 0;
   white-space: nowrap;
   pointer-events: none;
-  box-shadow: 0 -2px 8px rgba(59, 130, 246, 0.2);
   letter-spacing: 0.02em;
   display: flex;
   align-items: center;
-  gap: 6px;
 }
 
-.ave-overlay-label.ave-label-bottom {
+/* Hover label - standalone with full radius */
+.ave-hover-label {
+  position: absolute;
+  top: 0;
+  left: -1px;
+  transform: translateY(-100%);
+  border-radius: 4px 4px 0 0;
+  box-shadow: 0 -2px 8px rgba(59, 130, 246, 0.2);
+}
+
+.ave-hover-overlay .ave-hover-label.ave-label-bottom {
   top: auto;
   bottom: 0;
   transform: translateY(100%);
   border-radius: 0 0 4px 4px;
   box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+}
+
+/* Selected overlay label - connected to button, no right radius on top */
+.ave-label-wrapper .ave-overlay-label {
+  border-radius: 4px 0 0 0;
+  box-shadow: 0 -2px 12px rgba(37, 99, 235, 0.3);
+}
+
+.ave-label-wrapper.ave-label-bottom .ave-overlay-label {
+  border-radius: 0 0 0 4px;
+  box-shadow: 0 2px 12px rgba(37, 99, 235, 0.3);
 }
 
 .ave-label-text {
@@ -63,19 +99,28 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1px;
-  background: rgba(255, 255, 255, 0.15);
+  height: 23px;
+  padding: 0 4px;
+  background: rgba(37, 99, 235, 0.95);
+  backdrop-filter: blur(8px);
   border: none;
-  border-radius: 3px;
   color: white;
   cursor: pointer;
   pointer-events: auto;
-  transition: all 0.2s;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  border-radius: 0 4px 0 0;
+  box-shadow: 0 -2px 12px rgba(37, 99, 235, 0.3);
+  border-left:1px solid rgba(0, 0, 0, 0.15);
+}
+
+.ave-label-wrapper.ave-label-bottom .ave-label-parent-btn {
+  border-radius: 0 0 4px 0;
+  box-shadow: 0 2px 12px rgba(37, 99, 235, 0.3);
 }
 
 .ave-label-parent-btn:hover {
-  background: rgba(255, 255, 255, 0.25);
-  transform: scale(1.1);
+  background: rgba(37, 99, 235, 1);
 }
 
 .ave-label-parent-btn svg {
@@ -83,15 +128,9 @@
 }
 
 .ave-selected-overlay .ave-overlay-label {
-  left: -2px;
   background: rgba(37, 99, 235, 0.95);
   font-weight: 600;
-  box-shadow: 0 -2px 12px rgba(37, 99, 235, 0.3);
   pointer-events: auto;
-}
-
-.ave-selected-overlay .ave-overlay-label.ave-label-bottom {
-  box-shadow: 0 2px 12px rgba(37, 99, 235, 0.3);
 }
 
 /* ===== Add Element Buttons ===== */
@@ -110,9 +149,12 @@
   pointer-events: auto;
   box-shadow: 0 1px 3px rgba(59, 130, 246, 0.1);
   z-index: 999999;
+  opacity: 0;
+  transition: opacity 0.2s ease, background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
 .ave-add-btn:hover {
+  opacity: 1 !important;
   background: rgba(59, 130, 246, 0.15);
   border-color: rgba(59, 130, 246, 0.3);
 }
@@ -126,6 +168,7 @@
 
 /* Active/Selected state */
 .ave-add-btn.active {
+  opacity: 1 !important;
   background: rgba(59, 130, 246, 0.95);
   border: 2px solid rgba(59, 130, 246, 1);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
