@@ -17,10 +17,10 @@ Click any element in the browser -> describe the change -> Fronti routes it thro
    `npm install -g @anthropic-ai/claude-code`  
    Run the login command and connect your Anthropic account.
 2. Install both Fronti extensions
-   - Chrome: [Fronti - Visual Editor AI](https://chromewebstore.google.com/detail/visual-editor-ai/jojjbmgmggenijlkhjeaiodfoggjcjgj)
-   - VS Code: [Fronti AI extension](https://marketplace.visualstudio.com/items?itemName=VisualEditor.visual-editor-ai)
+   - Chrome: [Fronti AI](https://chromewebstore.google.com/detail/visual-editor-ai/jojjbmgmggenijlkhjeaiodfoggjcjgj)
+   - VS Code: [Fronti AI](https://marketplace.visualstudio.com/items?itemName=VisualEditor.visual-editor-ai)
 3. Prepare your workspace
-   - Open the project in VS Code with Claude Code CLI available on your PATH.
+   - Open the project in VS Code.
    - Start your local development server (for example `npm run dev` -> `http://localhost:3000`).
 4. Edit visually
    - Open the Fronti Chrome extension, point it to your localhost URL, click the element to adjust, describe the change, and review the edit in VS Code.
