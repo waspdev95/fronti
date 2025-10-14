@@ -2,9 +2,7 @@
 
 > Like v0, Bolt, and Lovable - but for your **existing local projects**. Free, local, and fully under your control.
 
-**Visual editing for local codebases using Claude Code agent.**
-
-Select elements in browser → Describe changes → AI agent handles coding ✨
+Click anything in your browser → Describe what you want → AI codes it for you ✨
 
 [![Chrome Web Store](https://img.shields.io/chrome-web-store/v/jojjbmgmggenijlkhjeaiodfoggjcjgj?label=Chrome%20Extension)](https://chromewebstore.google.com/detail/visual-editor-ai/jojjbmgmggenijlkhjeaiodfoggjcjgj)
 [![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/VisualEditor.visual-editor-ai?label=VS%20Code%20Extension)](https://marketplace.visualstudio.com/items?itemName=VisualEditor.visual-editor-ai)
@@ -13,38 +11,17 @@ Select elements in browser → Describe changes → AI agent handles coding ✨
 
 ---
 
-## ✨ Features
-
-⚡ **Visual-first** — Select UI elements in browser, AI codes automatically
-
-💻 **Local Development** — Works with your existing local projects
-
-🔑 **Uses Claude Code** — Powered by Claude's official VS Code agent
-
----
-
 ## 🚀 Quick Start
 
-**1. Install Both Extensions** (both required to work)
-- [📦 Chrome Extension](https://chromewebstore.google.com/detail/visual-editor-ai/jojjbmgmggenijlkhjeaiodfoggjcjgj)
-- [📦 VS Code Extension](https://marketplace.visualstudio.com/items?itemName=VisualEditor.visual-editor-ai)
+**1. Install Both Extensions**
+- [Chrome Extension](https://chromewebstore.google.com/detail/visual-editor-ai/jojjbmgmggenijlkhjeaiodfoggjcjgj)
+- [VS Code Extension](https://marketplace.visualstudio.com/items?itemName=VisualEditor.visual-editor-ai)
 
 **2. Use It**
 1. Open your project in VS Code
-2. Run dev server (e.g., `npm run dev` → `localhost:3000`)
+2. Run dev server (`npm run dev` → `localhost:3000`)
 3. Open Chrome extension, enter your localhost URL
-4. Select element → Describe change → Done! ✅
-
----
-
-## 📦 What's Included
-
-This monorepo contains both extensions needed to run Fronti:
-
-- **`/chrome-extension`** — Visual AI coding agent interface
-- **`/vsc-extension`** — VS Code integration for Claude Code
-
-Both extensions must be installed and work together.
+4. Click what you want to change → Describe it → Done! ✅
 
 ---
 
@@ -54,19 +31,19 @@ Both extensions must be installed and work together.
 |---------|-----------------|--------|
 | Works with existing code | ❌ | ✅ |
 | Local & private | ❌ | ✅ |
-| Bring your own API key | ❌ | ✅ |
-| Visual element selection | ✅ | ✅ |
+| Visual click-to-edit | ✅ | ✅ |
 | Full codebase control | ❌ | ✅ |
-| No monthly fees | ❌ | ✅ |
+| Free (no monthly fees) | ❌ | ✅ |
 
 ---
 
 ## 📋 Requirements
 
-- **Node.js** 18 or higher
-- **VS Code** with Claude Code installed and authenticated
-- **Chrome** browser (or Chromium-based)
-- **Claude API key** from [Anthropic Console](https://console.anthropic.com/)
+- Node.js 18+
+- VS Code with Claude Code
+- Chrome browser
+
+No API keys needed - just uses Claude Code.
 
 ---
 
@@ -117,18 +94,10 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## 🌟 Support
 
-If Fronti helps your development workflow, please ⭐ **star this repo**!
+If Fronti helps your workflow, please ⭐ star this repo!
 
-**Found a bug?** → [Report an issue](https://github.com/waspdev95/fronti/issues)
-**Have questions?** → [Start a discussion](https://github.com/waspdev95/fronti/discussions)
-
----
-
-## 🔗 Links
-
-- [Chrome Extension](https://chromewebstore.google.com/detail/visual-editor-ai/jojjbmgmggenijlkhjeaiodfoggjcjgj)
-- [VS Code Extension](https://marketplace.visualstudio.com/items?itemName=VisualEditor.visual-editor-ai)
+[Report bugs](https://github.com/waspdev95/fronti/issues) • [Discussions](https://github.com/waspdev95/fronti/discussions)
 
 ---
 
-<p align="center">Made with ❤️ for developers who want visual-first AI coding</p>
+<p align="center">Made with ❤️ for developers</p>
