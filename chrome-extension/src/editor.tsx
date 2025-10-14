@@ -1,14 +1,17 @@
+import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { useState, useEffect } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { Settings as SettingsIcon } from 'lucide-react';
-import { ExtensionManager } from './core/ExtensionManager';
 import { Onboarding } from './components/Onboarding';
 import { Settings } from './components/Settings';
 import { PreviewBar } from './components/PreviewBar';
 import { Console } from './components/Console';
 import { useSettings } from './hooks/useSettings';
 import { useAppStore } from './store';
+import { useNavigation } from './hooks/useNavigation';
+import { useResize } from './hooks/useResize';
+import { useIframeManager } from './hooks/useIframeManager';
 import './index.css';
 
 /**
@@ -62,10 +65,6 @@ function App() {
 function Editor({ targetUrl }: { targetUrl: string }) {
   const [iframeRef, setIframeRef] = useState<HTMLIFrameElement | null>(null);
   const [showSettings, setShowSettings] = useState(false);
-  const [navigationHistory, setNavigationHistory] = useState<string[]>([targetUrl]);
-  const [currentHistoryIndex, setCurrentHistoryIndex] = useState(0);
-  const [panelWidth, setPanelWidth] = useState(380);
-  const [isResizing, setIsResizing] = useState(false);
   const [panelHidden, setPanelHidden] = useState(false);
   const [consoleOpen, setConsoleOpen] = useState(false);
   const [consoleMessages, setConsoleMessages] = useState<any[]>([]);
@@ -73,6 +72,23 @@ function Editor({ targetUrl }: { targetUrl: string }) {
   const { settings } = useSettings();
   const currentIframeUrl = useAppStore((state) => state.currentIframeUrl);
   const setCurrentIframeUrl = useAppStore((state) => state.setCurrentIframeUrl);
+  const selectorMode = useAppStore((state) => state.selectorMode);
+  const toggleSelectorMode = useAppStore((state) => state.toggleSelectorMode);
+
+  // Custom hooks
+  const navigation = useNavigation(iframeRef, currentIframeUrl, setCurrentIframeUrl);
+  const resize = useResize();
+  const { shortcutManager } = useIframeManager(
+    iframeRef,
+    setCurrentIframeUrl,
+    navigation.navigationHistoryRef,
+    navigation.currentHistoryIndexRef,
+    navigation.setNavigationHistory,
+    navigation.setCurrentHistoryIndex,
+    navigation.isProgrammaticNavigation,
+    setConsoleMessages,
+    setNetworkRequests
+  );
 
   // Get last folder name from project path
   const getProjectFolderName = () => {
@@ -84,210 +100,56 @@ function Editor({ targetUrl }: { targetUrl: string }) {
 
   const projectFolder = getProjectFolderName();
 
-  // Navigation handlers
-  const handleNavigateBack = () => {
-    if (currentHistoryIndex > 0) {
-      const newIndex = currentHistoryIndex - 1;
-      setCurrentHistoryIndex(newIndex);
-      if (iframeRef) {
-        iframeRef.src = navigationHistory[newIndex];
-      }
-    }
-  };
-
-  const handleNavigateForward = () => {
-    if (currentHistoryIndex < navigationHistory.length - 1) {
-      const newIndex = currentHistoryIndex + 1;
-      setCurrentHistoryIndex(newIndex);
-      if (iframeRef) {
-        iframeRef.src = navigationHistory[newIndex];
-      }
-    }
-  };
-
-  const handleRefresh = () => {
-    if (iframeRef) {
-      // Force reload by reassigning src
-      const currentSrc = iframeRef.src;
-      iframeRef.src = '';
-      setTimeout(() => {
-        iframeRef.src = currentSrc;
-      }, 10);
-    }
-  };
-
   const handleTogglePanel = () => {
     setPanelHidden(!panelHidden);
   };
 
-  const handleUrlChange = (newUrl: string) => {
-    if (iframeRef) {
-      iframeRef.src = newUrl;
-    }
+  const handleToggleInspector = () => {
+    // Toggle selector mode - iframe sync handled by useEffect
+    toggleSelectorMode();
   };
 
-  // Resize handlers
-  const handleResizeStart = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsResizing(true);
+  // Setup keyboard shortcuts
+  useEffect(() => {
+    const manager = shortcutManager.current;
 
-    const handleMouseMove = (e: MouseEvent) => {
-      e.preventDefault();
-      const newWidth = e.clientX;
-      const maxWidth = window.innerWidth * 0.8; // 80% of screen width
-      // Min width: 280px, Max width: 80% of screen
-      if (newWidth >= 280 && newWidth <= maxWidth) {
-        setPanelWidth(newWidth);
-      }
+    // Register shortcuts
+    manager.register('toggle-inspector', {
+      key: 'v',
+      description: 'Toggle Inspector (V)',
+      action: handleToggleInspector,
+    });
+
+    // Listen for keyboard events from main window
+    const handleKeyDown = (e: KeyboardEvent) => {
+      manager.handleKeyEvent(e);
     };
 
-    const handleMouseUp = () => {
-      setIsResizing(false);
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      manager.clear();
     };
+  }, [iframeRef, selectorMode]); // Re-register when dependencies change
 
-    document.body.style.cursor = 'col-resize';
-    document.body.style.userSelect = 'none';
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-  };
-
-  // Periodically check URL changes
+  // Sync selector mode with iframe
   useEffect(() => {
     if (!iframeRef?.contentWindow) return;
 
-    const interval = setInterval(() => {
-      iframeRef.contentWindow?.postMessage({ type: 'AVE_GET_URL' }, '*');
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [iframeRef]);
-
-  useEffect(() => {
-    if (!iframeRef) return;
-
-    const iframe = iframeRef;
-
-    // Get panel container (no shadow DOM)
-    const panelRoot = document.getElementById('ave-panel-container');
-    if (!panelRoot) {
-      throw new Error('Panel container not found');
+    if (selectorMode) {
+      iframeRef.contentWindow.postMessage({ type: 'AVE_ACTIVATE' }, '*');
+    } else {
+      iframeRef.contentWindow.postMessage({ type: 'AVE_DEACTIVATE' }, '*');
     }
-
-    let manager: ExtensionManager | null = null;
-    let bridgeReady = false;
-
-    // Listen for messages from iframe-bridge
-    const messageHandler = (event: MessageEvent) => {
-      // Security: only accept from our iframe or if it's a bridge ready message
-      const { type, element, shiftKey } = event.data;
-
-      // Allow certain messages without strict source check (from iframe content script)
-      if (type === 'AVE_BRIDGE_READY') {
-        bridgeReady = true;
-        // Activate bridge based on selector mode
-        const store = useAppStore.getState();
-        if (store.selectorMode) {
-          iframe.contentWindow?.postMessage({ type: 'AVE_ACTIVATE' }, '*');
-        }
-        // Request current URL
-        iframe.contentWindow?.postMessage({ type: 'AVE_GET_URL' }, '*');
-        return;
-      }
-
-      // Console messages - capture early so they're not lost
-      if (type === 'AVE_CONSOLE') {
-        setConsoleMessages(prev => [...prev, {
-          id: `${Date.now()}-${Math.random()}`,
-          type: event.data.level,
-          args: event.data.args,
-          timestamp: Date.now()
-        }]);
-        return;
-      }
-
-      // Network messages - capture early so they're not lost
-      if (type === 'AVE_NETWORK') {
-        setNetworkRequests(prev => [...prev, {
-          id: `${Date.now()}-${Math.random()}`,
-          ...event.data.request
-        }]);
-        return;
-      }
-
-      if (type === 'AVE_URL_CHANGED') {
-        const newUrl = event.data.url;
-        setCurrentIframeUrl(newUrl);
-
-        // Update navigation history
-        if (navigationHistory[currentHistoryIndex] !== newUrl) {
-          const newHistory = navigationHistory.slice(0, currentHistoryIndex + 1);
-          newHistory.push(newUrl);
-          setNavigationHistory(newHistory);
-          setCurrentHistoryIndex(newHistory.length - 1);
-        }
-        return;
-      }
-
-      // For other messages, verify source
-      if (event.source !== iframe.contentWindow) return;
-
-      if (type === 'AVE_CURRENT_URL') {
-        setCurrentIframeUrl(event.data.url);
-      } else if (type === 'AVE_HOVER' && manager) {
-        manager.handleHover(element);
-      } else if (type === 'AVE_CLICK' && manager) {
-        manager.handleClick(element, shiftKey);
-      } else if (type === 'AVE_ESCAPE' && manager) {
-        manager.handleEscape();
-      } else if (type === 'AVE_POSITION_UPDATE' && manager) {
-        manager.handlePositionUpdate(element);
-      } else if (type === 'AVE_PARENT_SELECTED' && manager) {
-        manager.handleParentSelect(element);
-      } else if (type === 'AVE_PARENT_PREVIEW' && manager) {
-        manager.handleParentPreview(element);
-      }
-    };
-
-    window.addEventListener('message', messageHandler);
-
-    // Wait for iframe to load - content script will auto-inject
-    const loadHandler = () => {
-      // Reset bridge ready flag on new page load
-      bridgeReady = false;
-
-      // Initialize Extension Manager (auto-enabled, message-based mode)
-      manager = new ExtensionManager(panelRoot, iframe, true);
-
-      // Wait for bridge ready message from content script
-      // Content script auto-loads via manifest.json all_frames: true
-    };
-
-    // Listen to load event - will fire on every navigation
-    iframe.addEventListener('load', loadHandler);
-
-    // Cleanup
-    return () => {
-      window.removeEventListener('message', messageHandler);
-      iframe.removeEventListener('load', loadHandler);
-
-      // Clean up manager
-      if (manager) {
-        manager = null;
-      }
-    };
-  }, [iframeRef]);
+  }, [selectorMode, iframeRef]);
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-gray-50 font-sans">
       {/* Header */}
       <div className="h-[44px] flex items-center justify-between px-3 flex-shrink-0 bg-[#FAFAFA]">
         <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
-          Visual Editor AI
+          Fronti
           {projectFolder && (
             <span className="text-xs font-semibold text-gray-900 bg-white border border-gray-200 px-2 py-1 rounded-md shadow-sm" title={`Project: ${settings.projectPath}`}>
               {projectFolder}
@@ -313,40 +175,48 @@ function Editor({ targetUrl }: { targetUrl: string }) {
         <div
           id="ave-panel-container"
           className="overflow-auto flex-shrink-0 bg-[#FAFAFA]"
-          style={{ width: panelHidden ? '0px' : `${panelWidth}px`, display: panelHidden ? 'none' : 'block' }}
+          style={{ width: panelHidden ? '0px' : `${resize.panelWidth}px`, display: panelHidden ? 'none' : 'block' }}
         />
 
         {/* Resize Handler */}
         {!panelHidden && (
           <div
-            onMouseDown={handleResizeStart}
-            className="w-[12px] flex-shrink-0 cursor-col-resize relative flex items-center justify-center -ml-[6px] -mr-[6px] group"
-            style={{ userSelect: 'none' }}
+            onMouseDown={resize.handleResizeStart}
+            className="hover:bg-[#f1f1f1] active:bg-[#f1f1f1] z-[100] w-[8px] cursor-col-resize absolute top-0 bottom-0 flex items-center justify-center group"
+            style={{ userSelect: 'none', left: `${resize.panelWidth-8}px` }}
           >
-            <div className={`z-[100] w-[2px] h-12 rounded-full transition-all duration-150 ${isResizing ? 'bg-gray-700 w-[3px] h-16' : 'bg-transparent group-hover:bg-gray-600 group-hover:w-[2.5px] group-hover:h-14'}`} />
+            <div className={`w-[2px] h-12 rounded-full transition-all duration-150 ${resize.isResizing ? 'bg-gray-700 w-[3px] h-16' : 'bg-transparent group-hover:bg-gray-600 group-hover:w-[2.5px] group-hover:h-14'}`} />
           </div>
         )}
 
         {/* Resize Overlay - prevents iframe interaction during resize */}
-        {isResizing && (
+        {resize.isResizing && (
           <div
             className="fixed inset-0 z-[9999] cursor-col-resize"
             style={{ userSelect: 'none' }}
           />
         )}
 
+        {/* Console Resize Overlay */}
+        {resize.isResizingConsole && (
+          <div
+            className="fixed inset-0 z-[9999] cursor-row-resize"
+            style={{ userSelect: 'none' }}
+          />
+        )}
+
         {/* Iframe Wrapper */}
-        <div className={`flex-1 relative flex flex-col ${panelHidden ? 'p-3' : 'pr-3 pb-3'}`}>
-          <div className="flex-1 border border-gray-300 rounded-lg overflow-hidden flex flex-col">
+        <div className={`flex-1 min-w-0 relative flex flex-col ${panelHidden ? 'p-3' : 'pr-3 pb-3'}`}>
+          <div className="flex-1 min-h-0 border border-gray-300 rounded-lg overflow-hidden flex flex-col">
             {/* Preview Bar */}
             <PreviewBar
               currentUrl={currentIframeUrl || targetUrl}
-              onNavigateBack={handleNavigateBack}
-              onNavigateForward={handleNavigateForward}
-              onRefresh={handleRefresh}
-              onUrlChange={handleUrlChange}
-              canGoBack={currentHistoryIndex > 0}
-              canGoForward={currentHistoryIndex < navigationHistory.length - 1}
+              onNavigateBack={navigation.handleNavigateBack}
+              onNavigateForward={navigation.handleNavigateForward}
+              onRefresh={navigation.handleRefresh}
+              onUrlChange={navigation.handleUrlChange}
+              canGoBack={navigation.currentHistoryIndex > 0}
+              canGoForward={navigation.currentHistoryIndex < navigation.navigationHistory.length - 1}
               panelHidden={panelHidden}
               onTogglePanel={handleTogglePanel}
               onToggleConsole={() => setConsoleOpen(!consoleOpen)}
@@ -354,22 +224,38 @@ function Editor({ targetUrl }: { targetUrl: string }) {
             />
 
             {/* Content Area - iframe + console */}
-            <div className="flex-1 flex flex-col overflow-hidden">
-              <iframe
-                ref={setIframeRef}
-                src={targetUrl}
-                className={`w-full ${consoleOpen ? 'h-3/5' : 'h-full'} border-none transition-all duration-200`}
-              />
+            <div className="flex-1 flex flex-col overflow-hidden min-h-0">
+              <div className="flex-1 min-h-0 overflow-hidden">
+                <iframe
+                  ref={setIframeRef}
+                  src={targetUrl}
+                  className="w-full h-full border-none"
+                />
+              </div>
               {consoleOpen && (
-                <div className="w-full h-2/5">
-                  <Console
-                    onClose={() => setConsoleOpen(false)}
-                    messages={consoleMessages}
-                    networkRequests={networkRequests}
-                    onClearConsole={() => setConsoleMessages([])}
-                    onClearNetwork={() => setNetworkRequests([])}
-                  />
-                </div>
+                <>
+                  {/* Console Resize Handler */}
+                  <div
+                    onMouseDown={resize.handleConsoleResizeStart}
+                    className="hover:bg-[#f1f1f1] active:bg-[#f1f1f1] z-[100] h-[12px] flex-shrink-0 cursor-row-resize relative flex items-center justify-center -mt-[6px] -mb-[6px] group"
+                    style={{ userSelect: 'none' }}
+                  >
+                    <div className={`h-[2px] w-12 rounded-full transition-all duration-150 ${resize.isResizingConsole ? 'bg-gray-700 h-[3px] w-16' : 'bg-transparent group-hover:bg-gray-600 group-hover:h-[2.5px] group-hover:w-14'}`} />
+                  </div>
+                  {/* Console Panel */}
+                  <div
+                    className="w-full flex-shrink-0 min-h-0"
+                    style={{ height: `${resize.consoleHeight}px` }}
+                  >
+                    <Console
+                      onClose={() => setConsoleOpen(false)}
+                      messages={consoleMessages}
+                      networkRequests={networkRequests}
+                      onClearConsole={() => setConsoleMessages([])}
+                      onClearNetwork={() => setNetworkRequests([])}
+                    />
+                  </div>
+                </>
               )}
             </div>
           </div>

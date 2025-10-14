@@ -1,8 +1,12 @@
 #!/usr/bin/env node
 
 /**
- * Native Messaging Host for AI Visual Editor
- * Chrome extension ile Claude CLI arasında köprü
+ * Native Messaging Host for Fronti
+ *
+ * Provides a bridge between Chrome extension and Claude CLI using native messaging protocol.
+ * Handles command execution, streaming responses, and process management.
+ *
+ * @module native-host
  */
 
 import { spawn } from 'child_process';
@@ -11,13 +15,23 @@ import { homedir } from 'os';
 import { join } from 'path';
 import readline from 'readline';
 
-// Track spawned processes for cleanup
-const activeProcesses = new Set();
+// Constants
+const CONFIG_DIR = '.ai-visual-editor';
+const WORKSPACE_CONFIG_FILE = 'workspace.json';
+const MESSAGE_HEADER_SIZE = 4;
+const CLAUDE_COMMAND_TIMEOUT = 5000;
 
-// VSC extension'dan workspace path'ini oku
+// Process management
+const activeProcesses = new Set();
+let isShuttingDown = false;
+
+/**
+ * Read workspace path from VS Code extension config
+ * @returns {string|null} Workspace path or null if not found
+ */
 function getWorkspacePath() {
   try {
-    const configFile = join(homedir(), '.ai-visual-editor', 'workspace.json');
+    const configFile = join(homedir(), CONFIG_DIR, WORKSPACE_CONFIG_FILE);
 
     if (existsSync(configFile)) {
       const data = readFileSync(configFile, 'utf8');
@@ -25,26 +39,42 @@ function getWorkspacePath() {
       return config.projectPath || null;
     }
   } catch (error) {
-    console.error('Failed to read workspace info:', error);
+    logError('Failed to read workspace info', error);
   }
 
   return null;
 }
 
-// Native messaging protokolü - stdin'den mesaj oku
-function getMessage() {
-  // 4 byte header oku (message length)
-  const headerBuffer = Buffer.alloc(4);
-  const headerBytes = readSync(0, headerBuffer, 0, 4, null); // 0 = stdin
+/**
+ * Utility: Log error messages to stderr
+ */
+function logError(message, error) {
+  console.error(`[Error] ${message}:`, error?.message || error);
+}
 
-  if (headerBytes !== 4) {
+/**
+ * Utility: Log info messages to stderr
+ */
+function logInfo(message) {
+  console.error(`[Info] ${message}`);
+}
+
+/**
+ * Read message from stdin using native messaging protocol
+ * @returns {Object} Parsed message object
+ * @throws {Error} If message cannot be read
+ */
+function getMessage() {
+  const headerBuffer = Buffer.alloc(MESSAGE_HEADER_SIZE);
+  const headerBytes = readSync(0, headerBuffer, 0, MESSAGE_HEADER_SIZE, null);
+
+  if (headerBytes !== MESSAGE_HEADER_SIZE) {
     throw new Error('Failed to read message header');
   }
 
   const messageLength = headerBuffer.readUInt32LE(0);
-  console.error(`Receiving message (${messageLength} bytes)`);
+  logInfo(`Receiving message (${messageLength} bytes)`);
 
-  // Message oku
   const messageBuffer = Buffer.alloc(messageLength);
   const messageBytes = readSync(0, messageBuffer, 0, messageLength, null);
 
@@ -53,44 +83,98 @@ function getMessage() {
   }
 
   const message = JSON.parse(messageBuffer.toString());
-  console.error(`Message received:`, message.command);
+  logInfo(`Message received: ${message.command}`);
 
   return message;
 }
 
+/**
+ * Send message to stdout using native messaging protocol
+ * @param {Object} message - Message object to send
+ */
 function sendMessage(message) {
   const buffer = Buffer.from(JSON.stringify(message));
-  const header = Buffer.alloc(4);
+  const header = Buffer.alloc(MESSAGE_HEADER_SIZE);
   header.writeUInt32LE(buffer.length, 0);
 
   process.stdout.write(header);
   process.stdout.write(buffer);
 }
 
-async function executeClaude(prompt, projectPath, sessionId, isFirstMessage) {
-  const claudeArgs = [
+/**
+ * Build Claude CLI arguments based on permissions and session
+ * @param {Object} toolPermissions - Tool permission flags
+ * @param {string} sessionId - Session identifier
+ * @param {boolean} isFirstMessage - Whether this is first message
+ * @returns {string[]} Array of CLI arguments
+ */
+function buildClaudeArgs(toolPermissions, sessionId, isFirstMessage) {
+  const args = [
     '--print',
     '--verbose',
     '--output-format', 'stream-json',
-    '--include-partial-messages',
-    '--allowedTools', 'Bash,Write,Read,Edit,MultiEdit,Grep,Glob',
-    '--dangerously-skip-permissions'
+    '--include-partial-messages'
   ];
 
-  // Add session-id for first message, resume for subsequent messages
+  const allPermissionsEnabled = toolPermissions?.read &&
+    toolPermissions?.write &&
+    toolPermissions?.edit &&
+    toolPermissions?.bash &&
+    toolPermissions?.grep &&
+    toolPermissions?.glob &&
+    toolPermissions?.webSearch &&
+    toolPermissions?.webFetch;
+
+  if (allPermissionsEnabled) {
+    args.push('--dangerously-skip-permissions');
+    logInfo('All permissions enabled - using skip permissions');
+  } else {
+    const allowedTools = [];
+    if (toolPermissions?.read) allowedTools.push('Read');
+    if (toolPermissions?.write) allowedTools.push('Write');
+    if (toolPermissions?.edit) {
+      allowedTools.push('Edit');
+      allowedTools.push('MultiEdit');
+    }
+    if (toolPermissions?.bash) allowedTools.push('Bash');
+    if (toolPermissions?.grep) allowedTools.push('Grep');
+    if (toolPermissions?.glob) allowedTools.push('Glob');
+    if (toolPermissions?.webSearch) allowedTools.push('WebSearch');
+    if (toolPermissions?.webFetch) allowedTools.push('WebFetch');
+
+    const allowedToolsStr = allowedTools.length > 0 ? allowedTools.join(',') : 'Read';
+    args.push('--allowedTools', allowedToolsStr);
+    logInfo(`Selective permissions - allowed tools: ${allowedToolsStr}`);
+  }
+
   if (sessionId) {
     if (isFirstMessage) {
-      claudeArgs.push('--session-id', sessionId);
-      console.error(`Creating new session: ${sessionId}`);
+      args.push('--session-id', sessionId);
+      logInfo(`Creating new session: ${sessionId}`);
     } else {
-      claudeArgs.push('--resume', sessionId);
-      console.error(`Resuming session: ${sessionId}`);
+      args.push('--resume', sessionId);
+      logInfo(`Resuming session: ${sessionId}`);
     }
   }
 
-  console.error(`Executing Claude command with streaming...`);
-  console.error(`Working dir: ${projectPath || process.cwd()}`);
-  console.error(`Prompt length: ${prompt.length} characters`);
+  return args;
+}
+
+/**
+ * Execute Claude CLI command with streaming output
+ * @param {string} prompt - The prompt to send to Claude
+ * @param {string} projectPath - Working directory path
+ * @param {string} sessionId - Session identifier
+ * @param {boolean} isFirstMessage - Whether this is the first message in session
+ * @param {Object} toolPermissions - Tool permission flags
+ * @returns {Promise<void>}
+ */
+async function executeClaude(prompt, projectPath, sessionId, isFirstMessage, toolPermissions) {
+  const claudeArgs = buildClaudeArgs(toolPermissions, sessionId, isFirstMessage);
+
+  logInfo(`Executing Claude command`);
+  logInfo(`Working directory: ${projectPath || process.cwd()}`);
+  logInfo(`Prompt length: ${prompt.length} characters`);
 
   return new Promise((resolve, reject) => {
     const claude = spawn('claude', claudeArgs, {
@@ -117,32 +201,28 @@ async function executeClaude(prompt, projectPath, sessionId, isFirstMessage) {
     rl.on('line', (line) => {
       try {
         const data = JSON.parse(line);
-        console.error(`Stream: ${data.type}${data.subtype ? `/${data.subtype}` : ''}`);
+        logInfo(`Stream: ${data.type}${data.subtype ? `/${data.subtype}` : ''}`);
 
-        // Check if this is the final result
         if (data.type === 'result') {
           finalResult = data;
-          console.error(`Final result: ${data.subtype}, is_error: ${data.is_error}`);
+          logInfo(`Final result: ${data.subtype}, is_error: ${data.is_error}`);
         } else {
-          // Send stream chunk to extension (excluding result, will send separately)
           sendMessage({
             type: 'stream',
             data: data
           });
         }
       } catch (e) {
-        console.error(`Failed to parse line: ${line}`);
+        logError(`Failed to parse stream line`, e);
       }
     });
 
-    // Handle stderr
     claude.stderr.on('data', (data) => {
-      console.error(`Claude stderr: ${data.toString()}`);
+      logError('Claude stderr', data.toString());
     });
 
-    // Handle completion
     claude.on('close', (code) => {
-      console.error(`Claude process exited with code ${code}`);
+      logInfo(`Claude process exited with code ${code}`);
       activeProcesses.delete(claude);
 
       // Send completion message with final result
@@ -169,16 +249,13 @@ async function executeClaude(prompt, projectPath, sessionId, isFirstMessage) {
       resolve();
     });
 
-    // Handle spawn errors
     claude.on('error', (error) => {
-      console.error(`Spawn error: ${error.message}`);
+      logError('Claude spawn error', error);
       activeProcesses.delete(claude);
 
-      // Provide user-friendly error message
-      let errorMessage = error.message;
-      if (error.code === 'ENOENT') {
-        errorMessage = 'Claude CLI not found. Please install Claude Code CLI and make sure it\'s in your PATH.';
-      }
+      const errorMessage = error.code === 'ENOENT'
+        ? 'Claude CLI not found. Please install Claude Code CLI and ensure it\'s in your PATH.'
+        : error.message;
 
       sendMessage({
         type: 'error',
@@ -189,9 +266,10 @@ async function executeClaude(prompt, projectPath, sessionId, isFirstMessage) {
   });
 }
 
-// Check if VS Code extension is installed
+/**
+ * Check if VS Code extension is installed
+ */
 async function checkVscExtension() {
-  // If we're here, native host is working = extension is installed
   sendMessage({
     type: 'checkResult',
     success: true,
@@ -199,14 +277,17 @@ async function checkVscExtension() {
   });
 }
 
-// Check if Claude Code CLI is installed
+/**
+ * Check if Claude Code CLI is installed
+ */
 async function checkClaudeCode() {
   try {
-    // Try to spawn 'claude' command
     const { execSync } = await import('child_process');
-    const output = execSync('claude --version', { encoding: 'utf8', timeout: 5000 });
+    const output = execSync('claude --version', {
+      encoding: 'utf8',
+      timeout: CLAUDE_COMMAND_TIMEOUT
+    });
 
-    // If we got here, Claude Code is installed
     sendMessage({
       type: 'checkResult',
       success: true,
@@ -223,21 +304,26 @@ async function checkClaudeCode() {
   }
 }
 
-// Check everything at once
+/**
+ * Check all dependencies at once
+ */
 async function checkAll() {
   let claudeInstalled = false;
   let claudeVersion = null;
 
   try {
     const { execSync } = await import('child_process');
-    const output = execSync('claude --version', { encoding: 'utf8', timeout: 5000, stdio: 'pipe' });
+    const output = execSync('claude --version', {
+      encoding: 'utf8',
+      timeout: CLAUDE_COMMAND_TIMEOUT,
+      stdio: 'pipe'
+    });
     claudeInstalled = true;
     claudeVersion = output.trim();
   } catch (error) {
     claudeInstalled = false;
   }
 
-  // VSC extension'dan workspace path'ini al
   const projectPath = getWorkspacePath();
 
   sendMessage({
@@ -252,95 +338,106 @@ async function checkAll() {
       version: claudeVersion,
       error: claudeInstalled ? null : 'Claude Code not found'
     },
-    projectPath: projectPath
+    projectPath
   });
 }
 
-// Cleanup function
-let isShuttingDown = false;
-
+/**
+ * Cleanup function to terminate all active processes
+ */
 function cleanup() {
   if (isShuttingDown) return;
   isShuttingDown = true;
 
-  console.error('[Cleanup] Native host shutting down...');
-  console.error(`[Cleanup] Killing ${activeProcesses.size} active processes`);
+  logInfo('Native host shutting down...');
+  logInfo(`Terminating ${activeProcesses.size} active processes`);
 
-  // Kill all spawned Claude processes
   activeProcesses.forEach(proc => {
     try {
       if (!proc.killed) {
         proc.kill('SIGTERM');
-        console.error('[Cleanup] Killed process:', proc.pid);
+        logInfo(`Terminated process: ${proc.pid}`);
       }
     } catch (err) {
-      console.error('[Cleanup] Failed to kill process:', err.message);
+      logError(`Failed to terminate process`, err);
     }
   });
 
   activeProcesses.clear();
 
-  // Exit after a short delay to ensure cleanup completes
   setTimeout(() => {
     process.exit(0);
   }, 100);
 }
 
-// Handle graceful shutdown signals
+/**
+ * Signal handlers for graceful shutdown
+ */
 process.on('SIGTERM', () => {
-  console.error('[Signal] Received SIGTERM - shutting down gracefully');
+  logInfo('Received SIGTERM - shutting down gracefully');
   cleanup();
 });
 
 process.on('SIGINT', () => {
-  console.error('[Signal] Received SIGINT - shutting down gracefully');
+  logInfo('Received SIGINT - shutting down gracefully');
   cleanup();
 });
 
 process.on('SIGHUP', () => {
-  console.error('[Signal] Received SIGHUP - shutting down gracefully');
+  logInfo('Received SIGHUP - shutting down gracefully');
   cleanup();
 });
 
-// Handle stdin close
 process.stdin.on('end', () => {
-  console.error('[Stdin] Stdin closed - shutting down');
+  logInfo('Stdin closed - shutting down');
   cleanup();
 });
 
 process.stdin.on('close', () => {
-  console.error('[Stdin] Stdin stream closed - shutting down');
+  logInfo('Stdin stream closed - shutting down');
   cleanup();
 });
 
-// Main
+/**
+ * Main message loop
+ */
 (async () => {
   try {
     while (true) {
       const message = getMessage();
 
-      if (message.command === 'execute') {
-        await executeClaude(message.prompt, message.projectPath, message.sessionId, message.isFirstMessage);
-      } else if (message.command === 'checkAll') {
-        await checkAll();
-      } else if (message.command === 'checkVscExtension') {
-        await checkVscExtension();
-      } else if (message.command === 'checkClaudeCode') {
-        await checkClaudeCode();
-      } else {
-        sendMessage({
-          type: 'error',
-          error: 'Unknown command'
-        });
+      switch (message.command) {
+        case 'execute':
+          await executeClaude(
+            message.prompt,
+            message.projectPath,
+            message.sessionId,
+            message.isFirstMessage,
+            message.toolPermissions
+          );
+          break;
+        case 'checkAll':
+          await checkAll();
+          break;
+        case 'checkVscExtension':
+          await checkVscExtension();
+          break;
+        case 'checkClaudeCode':
+          await checkClaudeCode();
+          break;
+        default:
+          sendMessage({
+            type: 'error',
+            error: `Unknown command: ${message.command}`
+          });
       }
     }
   } catch (error) {
-    // Stdin closed - normal shutdown
     if (error.message?.includes('Failed to read')) {
-      console.error('[Error] Stdin closed - exiting gracefully');
+      logInfo('Stdin closed - exiting gracefully');
       cleanup();
     } else {
-      console.error('Native host error:', error);
+      logError('Fatal error', error);
       process.exit(1);
     }
   }

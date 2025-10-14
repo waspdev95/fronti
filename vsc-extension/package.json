@@ -1,8 +1,8 @@
 {
   "name": "visual-editor-ai",
-  "displayName": "Visual Editor - Visual-first AI coding agent",
+  "displayName": "Fronti AI",
   "description": "Visual-first AI coding agent for local codebases. Select elements in browser, describe changes, agent applies edits.",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "publisher": "VisualEditor",
   "icon": "resources/icon.png",
   "engines": {
@@ -20,16 +20,16 @@
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "visualEditorAI",
-          "title": "Visual Editor AI",
+          "id": "FrontiAI",
+          "title": "Fronti",
           "icon": "resources/icon.svg"
         }
       ]
     },
     "views": {
-      "visualEditorAI": [
+      "FrontiAI": [
         {
-          "id": "visualEditorAI.chromeExtension",
+          "id": "FrontiAI.chromeExtension",
           "name": "Getting Started",
           "type": "webview"
         }
@@ -56,7 +56,6 @@
     "radix ui",
     "styled components",
     "frontend",
-    "visual editor",
     "react",
     "nextjs",
     "vue",
@@ -64,10 +63,32 @@
     "css",
     "html",
     "typescript",
-    "javascript"
-    
+    "javascript",
+    "v0",
+    "vibe",
+    "dev",
+    "bolt",
+    "loveable",
+    "base44",
+    "dyad",
+    "cursor",
+    "windsurf",
+    "replit",
+    "stackblitz",
+    "codesandbox",
+    "ai code editor",
+    "ai assistant",
+    "code generation"
   ],
-  "author": "Visual Editor AI Team",
+  "author": "Fronti",
   "license": "MIT",
-  "type": "commonjs"
+  "type": "commonjs",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/waspdev95/fronti"
+  },
+  "bugs": {
+    "url": "https://github.com/waspdev95/fronti/issues"
+  },
+  "homepage": "https://github.com/waspdev95/fronti#readme"
 }

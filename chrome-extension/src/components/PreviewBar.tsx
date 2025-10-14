@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight, ExternalLink, RotateCw, ChevronsLeft, MessageSquare, Eye, Code2, Terminal } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
+import { Tooltip } from './Tooltip';
 
 interface PreviewBarProps {
   currentUrl: string;
@@ -72,29 +73,31 @@ export const PreviewBar = ({
       {/* Left side */}
       <div className="flex w-full sm:max-w-1/4 max-w-fit shrink-1 items-center gap-0.5 sm:gap-1.5">
         {/* Sidebar toggle */}
-        <button
-          onClick={onTogglePanel}
-          className="shrink-0 cursor-pointer items-center justify-center gap-1.5 border font-medium transition hover:bg-gray-100 focus-visible:bg-gray-100 border-transparent bg-transparent text-gray-900 rounded-lg hidden sm:flex h-7 px-2"
-          title={panelHidden ? "Show chat" : "Hide chat"}
-        >
-          {panelHidden ? (
-            <>
-              <MessageSquare size={16} />
-              <span className="text-sm font-medium">Chat</span>
-            </>
-          ) : (
-            <ChevronsLeft size={16} />
-          )}
-        </button>
+        <Tooltip content={panelHidden ? "Show chat" : "Hide chat"}>
+          <button
+            onClick={onTogglePanel}
+            className="shrink-0 cursor-pointer items-center justify-center gap-1.5 border font-medium transition hover:bg-gray-100 focus-visible:bg-gray-100 border-transparent bg-transparent text-gray-900 rounded-lg hidden sm:flex h-7 px-2"
+          >
+            {panelHidden ? (
+              <>
+                <MessageSquare size={16} />
+                <span className="text-sm font-medium">Chat</span>
+              </>
+            ) : (
+              <ChevronsLeft size={16} />
+            )}
+          </button>
+        </Tooltip>
 
         {/* Mobile sidebar toggle */}
-        <button
-          onClick={onTogglePanel}
-          className="inline-flex shrink-0 cursor-pointer items-center justify-center border font-medium transition hover:bg-gray-100 border-transparent bg-transparent rounded-lg sm:hidden size-7 text-gray-900"
-          title={panelHidden ? "Show chat" : "Hide chat"}
-        >
-          {panelHidden ? <MessageSquare size={16} /> : <ChevronsLeft size={16} />}
-        </button>
+        <Tooltip content={panelHidden ? "Show chat" : "Hide chat"}>
+          <button
+            onClick={onTogglePanel}
+            className="inline-flex shrink-0 cursor-pointer items-center justify-center border font-medium transition hover:bg-gray-100 border-transparent bg-transparent rounded-lg sm:hidden size-7 text-gray-900"
+          >
+            {panelHidden ? <MessageSquare size={16} /> : <ChevronsLeft size={16} />}
+          </button>
+        </Tooltip>
 
         {/* Preview/Code tabs */}
         {/* <div className="relative h-7 font-medium hidden sm:flex">
@@ -146,22 +149,28 @@ export const PreviewBar = ({
           <div className="relative flex items-center flex-1 bg-gray-100 min-w-0 border border-gray-300 rounded-md h-7 max-w-[300px]">
             {/* Navigation buttons */}
             <div className="items-center pl-1 hidden sm:flex">
-              <button
-                onClick={onNavigateBack}
-                disabled={!canGoBack}
-                className="inline-flex shrink-0 cursor-pointer items-center justify-center border font-medium transition hover:bg-gray-200 focus-visible:bg-gray-200 border-transparent bg-transparent hover:border-transparent focus:border-transparent disabled:border-transparent disabled:bg-transparent disabled:text-gray-400 text-xs text-gray-900 size-5 rounded-full p-0.5"
-                title="Back"
-              >
-                <ChevronLeft size={16} />
-              </button>
-              <button
-                onClick={onNavigateForward}
-                disabled={!canGoForward}
-                className="inline-flex shrink-0 cursor-pointer items-center justify-center border font-medium transition hover:bg-gray-200 focus-visible:bg-gray-200 border-transparent bg-transparent hover:border-transparent focus:border-transparent disabled:border-transparent disabled:bg-transparent disabled:text-gray-400 text-xs text-gray-900 size-5 rounded-full p-0.5"
-                title="Forward"
-              >
-                <ChevronRight size={16} />
-              </button>
+              <Tooltip content="Back">
+                <button
+                  onClick={onNavigateBack}
+                  disabled={!canGoBack}
+                  className={`inline-flex shrink-0 cursor-pointer items-center justify-center border font-medium transition hover:bg-gray-200 focus-visible:bg-gray-200 border-transparent bg-transparent hover:border-transparent focus:border-transparent disabled:border-transparent disabled:bg-transparent text-xs size-5 rounded-full p-0.5 ${
+                    canGoBack ? 'text-gray-900' : 'text-gray-400 cursor-default'
+                  }`}
+                >
+                  <ChevronLeft size={16} />
+                </button>
+              </Tooltip>
+              <Tooltip content="Forward">
+                <button
+                  onClick={onNavigateForward}
+                  disabled={!canGoForward}
+                  className={`inline-flex shrink-0 cursor-pointer items-center justify-center border font-medium transition hover:bg-gray-200 focus-visible:bg-gray-200 border-transparent bg-transparent hover:border-transparent focus:border-transparent disabled:border-transparent disabled:bg-transparent text-xs size-5 rounded-full p-0.5 ${
+                    canGoForward ? 'text-gray-900' : 'text-gray-400 cursor-default'
+                  }`}
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </Tooltip>
             </div>
 
             {/* URL input */}
@@ -178,20 +187,22 @@ export const PreviewBar = ({
 
             {/* Right side buttons */}
             <div className="flex items-center pr-1">
-              <button
-                onClick={handleOpenInNewTab}
-                className="shrink-0 cursor-pointer items-center justify-center border font-medium transition hover:bg-gray-200 focus-visible:bg-gray-200 border-transparent bg-transparent hover:border-transparent focus:border-transparent text-xs text-gray-900 size-5 rounded-full p-0.5 hidden sm:flex"
-                title="Open in new tab"
-              >
-                <ExternalLink size={16} />
-              </button>
-              <button
-                onClick={onRefresh}
-                className="inline-flex shrink-0 cursor-pointer items-center justify-center border font-medium transition hover:bg-gray-200 focus-visible:bg-gray-200 border-transparent bg-transparent hover:border-transparent focus:border-transparent text-xs text-gray-900 size-5 rounded-full p-0.5"
-                title="Refresh"
-              >
-                <RotateCw size={16} />
-              </button>
+              <Tooltip content="Open in new tab">
+                <button
+                  onClick={handleOpenInNewTab}
+                  className="shrink-0 cursor-pointer items-center justify-center border font-medium transition hover:bg-gray-200 focus-visible:bg-gray-200 border-transparent bg-transparent hover:border-transparent focus:border-transparent text-xs text-gray-900 size-5 rounded-full p-0.5 hidden sm:flex"
+                >
+                  <ExternalLink size={16} />
+                </button>
+              </Tooltip>
+              <Tooltip content="Refresh">
+                <button
+                  onClick={onRefresh}
+                  className="inline-flex shrink-0 cursor-pointer items-center justify-center border font-medium transition hover:bg-gray-200 focus-visible:bg-gray-200 border-transparent bg-transparent hover:border-transparent focus:border-transparent text-xs text-gray-900 size-5 rounded-full p-0.5"
+                >
+                  <RotateCw size={16} />
+                </button>
+              </Tooltip>
             </div>
           </div>
         </div>
@@ -199,17 +210,18 @@ export const PreviewBar = ({
 
       {/* Right side */}
       <div className="flex min-w-fit sm:w-1/4 items-center justify-end gap-1">
-        {/* <button
-          onClick={onToggleConsole}
-          className={`inline-flex shrink-0 cursor-pointer items-center justify-center border font-medium transition ${
-            consoleOpen
-              ? 'bg-gray-900 text-white hover:bg-gray-800'
-              : 'bg-transparent text-gray-900 hover:bg-gray-100 border-transparent'
-          } text-sm size-7 rounded-md`}
-          title={consoleOpen ? "Close console" : "Open console"}
-        >
-          <Terminal size={16} />
-        </button> */}
+        {/* <Tooltip content={consoleOpen ? "Close console" : "Open console"}>
+          <button
+            onClick={onToggleConsole}
+            className={`inline-flex shrink-0 cursor-pointer items-center justify-center border font-medium transition ${
+              consoleOpen
+                ? 'bg-gray-900 text-white hover:bg-gray-800'
+                : 'bg-transparent text-gray-900 hover:bg-gray-100 border-transparent'
+            } text-sm size-7 rounded-md`}
+          >
+            <Terminal size={16} />
+          </button>
+        </Tooltip> */}
       </div>
     </div>
   );

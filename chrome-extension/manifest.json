@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Visual Editor AI",
-  "version": "1.0.0",
-  "description": "AI visual editor for local development - design and code your projects with AI",
+  "name": "Fronti",
+  "version": "1.0.2",
+  "description": "Fronti for local development - design and code your projects with AI",
   "icons": {
     "16": "icon16.png",
     "48": "icon48.png",
@@ -10,19 +10,15 @@
   },
   "permissions": [
     "nativeMessaging",
-    "storage"
+    "storage",
+    "tabs",
+    "webNavigation"
+  ],
+  "host_permissions": [
+    "<all_urls>"
   ],
   "action": {
-    "default_title": "Open Visual Editor AI"
-  },
-  "commands": {
-    "toggle-editor": {
-      "suggested_key": {
-        "default": "Ctrl+Shift+K",
-        "mac": "Command+Shift+K"
-      },
-      "description": "Open Visual Editor AI"
-    }
+    "default_title": "Open Fronti"
   },
   "background": {
     "service_worker": "src/background.ts",
@@ -32,7 +28,7 @@
     {
       "matches": ["<all_urls>"],
       "js": ["src/iframe-bridge.ts"],
-      "run_at": "document_idle",
+      "run_at": "document_start",
       "all_frames": true
     }
   ],

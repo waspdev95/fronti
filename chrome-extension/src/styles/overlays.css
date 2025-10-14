@@ -36,6 +36,7 @@
   font-size: 11px;
   font-weight: 500;
   line-height: 1.4;
+  height: 23px;
   border-radius: 4px 4px 0 0;
   white-space: nowrap;
   pointer-events: none;
@@ -91,4 +92,91 @@
 
 .ave-selected-overlay .ave-overlay-label.ave-label-bottom {
   box-shadow: 0 2px 12px rgba(37, 99, 235, 0.3);
+}
+
+/* ===== Add Element Buttons ===== */
+.ave-add-btn {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  background: rgba(59, 130, 246, 0.08);
+  backdrop-filter: blur(8px);
+  border: 1.5px solid rgba(59, 130, 246, 0.2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  pointer-events: auto;
+  box-shadow: 0 1px 3px rgba(59, 130, 246, 0.1);
+  z-index: 999999;
+}
+
+.ave-add-btn:hover {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.ave-add-btn svg {
+  width: 14px;
+  height: 14px;
+  stroke: rgba(59, 130, 246, 0.6);
+  stroke-width: 2.5;
+}
+
+/* Active/Selected state */
+.ave-add-btn.active {
+  background: rgba(59, 130, 246, 0.95);
+  border: 2px solid rgba(59, 130, 246, 1);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.ave-add-btn.active svg {
+  stroke: white;
+}
+
+.ave-add-btn.active:hover {
+  background: rgba(59, 130, 246, 1);
+  border-color: rgba(59, 130, 246, 1);
+}
+
+/* Position buttons 20px outside the highlight */
+.ave-add-btn-top {
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-50%);
+}
+
+.ave-add-btn-top:hover {
+  transform: translateX(-50%) translateY(-50%) scale(1.1);
+}
+
+.ave-add-btn-bottom {
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(50%);
+}
+
+.ave-add-btn-bottom:hover {
+  transform: translateX(-50%) translateY(50%) scale(1.1);
+}
+
+.ave-add-btn-left {
+  left: -20px;
+  top: 50%;
+  transform: translateX(-50%) translateY(-50%);
+}
+
+.ave-add-btn-left:hover {
+  transform: translateX(-50%) translateY(-50%) scale(1.1);
+}
+
+.ave-add-btn-right {
+  right: -20px;
+  top: 50%;
+  transform: translateX(50%) translateY(-50%);
+}
+
+.ave-add-btn-right:hover {
+  transform: translateX(50%) translateY(-50%) scale(1.1);
 }

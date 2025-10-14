@@ -104,7 +104,7 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
     <div className="flex items-start justify-center min-h-screen bg-white px-6 pt-16 pb-12">
       <div className="max-w-2xl w-full">
         <h1 className="m-0 mb-2 text-[1.75rem] font-semibold text-black tracking-tight">
-          Welcome to Visual Editor AI
+          Welcome to Fronti
         </h1>
         <p className="m-0 mb-12 text-gray-600 text-[0.9375rem]">
           Let's get you set up in a few simple steps
@@ -124,7 +124,7 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
                 )}
                 {currentStep === OnboardingStep.INSTALL_VSC && (
                   <div className="mt-4">
-                    <p className="m-0 mb-4 text-gray-600 text-sm">Install Visual Editor AI VS Code extension to connect</p>
+                    <p className="m-0 mb-4 text-gray-600 text-sm">Install Fronti VS Code extension to connect</p>
                     <button
                       onClick={handleInstallVscClick}
                       className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium cursor-pointer transition-opacity bg-black text-white border border-black hover:opacity-80 mr-2"
@@ -216,7 +216,7 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
                     <button
                       onClick={handleComplete}
                       disabled={!projectPath.trim()}
-                      className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium cursor-pointer transition-opacity bg-black text-white border border-black mt-4 w-full hover:opacity-80 disabled:opacity-30 disabled:cursor-not-allowed"
+                      className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium cursor-pointer transition-opacity bg-black text-white border border-black mt-4 w-full hover:opacity-80 disabled:opacity-30 disabled:cursor-default"
                     >
                       Start Editing
                     </button>

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { Terminal, X, Copy, Trash2, ChevronRight, ChevronDown, Network, Search } from 'lucide-react';
+import { Terminal, X, Copy, Ban, ChevronRight, ChevronDown, Network, Search } from 'lucide-react';
+import { Tooltip } from './Tooltip';
 
 interface ConsoleMessage {
   id: string;
@@ -32,7 +33,8 @@ export const Console = ({ onClose, messages, networkRequests, onClearConsole, on
   const [activeTab, setActiveTab] = useState<'console' | 'network'>('console');
   const [expandedMessages, setExpandedMessages] = useState<Set<string>>(new Set());
   const [networkFilter, setNetworkFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | '2xx' | '3xx' | '4xx' | '5xx' | 'error'>('all');
+  const [resourceTypeFilter, setResourceTypeFilter] = useState<'all' | 'fetch' | 'xhr' | 'doc' | 'css' | 'js' | 'font' | 'img' | 'media' | 'other'>('all');
+  const [consoleLogLevelFilter, setConsoleLogLevelFilter] = useState<'all' | 'log' | 'error' | 'warn' | 'info'>('all');
   const consoleRef = useRef<HTMLDivElement>(null);
   const networkRef = useRef<HTMLDivElement>(null);
 
@@ -142,6 +144,35 @@ export const Console = ({ onClose, messages, networkRequests, onClearConsole, on
     }
   };
 
+  // Map resource types to filter categories
+  const getResourceCategory = (type: string): string => {
+    const lowerType = type.toLowerCase();
+    if (lowerType === 'fetch') return 'fetch';
+    if (lowerType === 'xhr') return 'xhr';
+    if (lowerType === 'document') return 'doc';
+    if (lowerType === 'stylesheet') return 'css';
+    if (lowerType === 'script') return 'js';
+    if (lowerType === 'font') return 'font';
+    if (lowerType === 'image') return 'img';
+    if (lowerType === 'media' || lowerType === 'video' || lowerType === 'audio') return 'media';
+    return 'other';
+  };
+
+  // Filter console messages by log level
+  const filteredConsoleMessages = messages.filter(msg => {
+    if (consoleLogLevelFilter === 'all') return true;
+    return msg.type === consoleLogLevelFilter;
+  });
+
+  // Count messages by type
+  const consoleCounts = {
+    all: messages.length,
+    error: messages.filter(m => m.type === 'error').length,
+    warn: messages.filter(m => m.type === 'warn').length,
+    info: messages.filter(m => m.type === 'info').length,
+    log: messages.filter(m => m.type === 'log').length,
+  };
+
   // Filter network requests
   const filteredNetworkRequests = networkRequests.filter(req => {
     // Text filter
@@ -149,13 +180,11 @@ export const Console = ({ onClose, messages, networkRequests, onClearConsole, on
       return false;
     }
 
-    // Status filter
-    if (statusFilter !== 'all') {
-      if (statusFilter === 'error' && !req.error) return false;
-      if (statusFilter === '2xx' && (req.status < 200 || req.status >= 300)) return false;
-      if (statusFilter === '3xx' && (req.status < 300 || req.status >= 400)) return false;
-      if (statusFilter === '4xx' && (req.status < 400 || req.status >= 500)) return false;
-      if (statusFilter === '5xx' && req.status < 500) return false;
+    // Resource type filter
+    if (resourceTypeFilter !== 'all') {
+      const category = getResourceCategory(req.type);
+      if (resourceTypeFilter === 'fetch' && category !== 'fetch' && category !== 'xhr') return false;
+      if (resourceTypeFilter !== 'fetch' && category !== resourceTypeFilter) return false;
     }
 
     return true;
@@ -195,33 +224,62 @@ export const Console = ({ onClose, messages, networkRequests, onClearConsole, on
           </div>
         </div>
         <div className="flex items-center gap-1">
-          <button
-            onClick={handleCopyAll}
-            className="p-1.5 hover:bg-gray-200 rounded transition-colors"
-            title="Copy all"
-          >
-            <Copy size={14} className="text-gray-600" />
-          </button>
-          <button
-            onClick={handleClear}
-            className="p-1.5 hover:bg-gray-200 rounded transition-colors"
-            title={activeTab === 'console' ? 'Clear console' : 'Clear network'}
-          >
-            <Trash2 size={14} className="text-gray-600" />
-          </button>
-          <button
-            onClick={onClose}
-            className="p-1.5 hover:bg-gray-200 rounded transition-colors"
-            title="Close"
-          >
-            <X size={14} className="text-gray-600" />
-          </button>
+          <Tooltip content="Copy all">
+            <button
+              onClick={handleCopyAll}
+              className="p-1.5 hover:bg-gray-200 rounded transition-colors"
+            >
+              <Copy size={14} className="text-gray-600" />
+            </button>
+          </Tooltip>
+          <Tooltip content={activeTab === 'console' ? 'Clear console' : 'Clear network'}>
+            <button
+              onClick={handleClear}
+              className="p-1.5 hover:bg-gray-200 rounded transition-colors"
+            >
+              <Ban size={14} className="text-gray-600" />
+            </button>
+          </Tooltip>
+          <Tooltip content="Close console">
+            <button
+              onClick={onClose}
+              className="p-1.5 hover:bg-gray-200 rounded transition-colors"
+            >
+              <X size={14} className="text-gray-600" />
+            </button>
+          </Tooltip>
         </div>
       </div>
 
+      {/* Console Filters */}
+      {activeTab === 'console' && (
+        <div className="flex items-center gap-1 px-3 py-2 border-b border-gray-200 bg-gray-50 flex-wrap">
+          {[
+            { value: 'all', label: 'All', count: consoleCounts.all },
+            { value: 'error', label: 'Errors', count: consoleCounts.error },
+            { value: 'warn', label: 'Warnings', count: consoleCounts.warn },
+            { value: 'info', label: 'Info', count: consoleCounts.info },
+            { value: 'log', label: 'Logs', count: consoleCounts.log },
+          ].map((filter) => (
+            <button
+              key={filter.value}
+              onClick={() => setConsoleLogLevelFilter(filter.value as any)}
+              className={`px-2 py-0.5 text-xs font-medium rounded transition-colors ${
+                consoleLogLevelFilter === filter.value
+                  ? 'bg-gray-900 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+              }`}
+            >
+              {filter.label} {filter.count > 0 && <span className="opacity-70">({filter.count})</span>}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Network Filters */}
       {activeTab === 'network' && (
-        <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-200 bg-gray-50">
+        <div className="flex flex-col gap-2 px-3 py-2 border-b border-gray-200 bg-gray-50">
+          {/* Search filter */}
           <div className="relative flex-1">
             <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
@@ -232,30 +290,45 @@ export const Console = ({ onClose, messages, networkRequests, onClearConsole, on
               className="w-full pl-7 pr-3 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
             />
           </div>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as any)}
-            className="text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-          >
-            <option value="all">All</option>
-            <option value="2xx">2xx</option>
-            <option value="3xx">3xx</option>
-            <option value="4xx">4xx</option>
-            <option value="5xx">5xx</option>
-            <option value="error">Error</option>
-          </select>
+
+          {/* Resource type filters */}
+          <div className="flex items-center gap-1 flex-wrap">
+            {[
+              { value: 'all', label: 'All' },
+              { value: 'fetch', label: 'Fetch/XHR' },
+              { value: 'doc', label: 'Doc' },
+              { value: 'css', label: 'CSS' },
+              { value: 'js', label: 'JS' },
+              { value: 'font', label: 'Font' },
+              { value: 'img', label: 'Img' },
+              { value: 'media', label: 'Media' },
+              { value: 'other', label: 'Other' },
+            ].map((filter) => (
+              <button
+                key={filter.value}
+                onClick={() => setResourceTypeFilter(filter.value as any)}
+                className={`px-2 py-0.5 text-xs font-medium rounded transition-colors ${
+                  resourceTypeFilter === filter.value
+                    ? 'bg-gray-900 text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                }`}
+              >
+                {filter.label}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
       {/* Console Messages */}
       {activeTab === 'console' && (
         <div ref={consoleRef} className="flex-1 overflow-y-auto p-2 space-y-0.5 font-mono text-xs">
-          {messages.length === 0 ? (
+          {filteredConsoleMessages.length === 0 ? (
             <div className="flex items-center justify-center h-full text-gray-400 text-sm">
-              Console messages will appear here
+              {messages.length === 0 ? 'Console messages will appear here' : 'No messages match the filter'}
             </div>
           ) : (
-          messages.map((msg) => {
+          filteredConsoleMessages.map((msg) => {
             const isExpanded = expandedMessages.has(msg.id);
             const hasObject = msg.args.some(arg => typeof arg === 'object' && arg !== null);
             const time = new Date(msg.timestamp).toLocaleTimeString();
@@ -304,56 +377,69 @@ export const Console = ({ onClose, messages, networkRequests, onClearConsole, on
 
       {/* Network Requests */}
       {activeTab === 'network' && (
-        <div ref={networkRef} className="flex-1 overflow-y-auto">
+        <div ref={networkRef} className="flex-1 overflow-y-auto flex flex-col">
           {filteredNetworkRequests.length === 0 ? (
             <div className="flex items-center justify-center h-full text-gray-400 text-sm">
               {networkRequests.length === 0 ? 'Network requests will appear here' : 'No requests match the filter'}
             </div>
           ) : (
-            <div className="divide-y divide-gray-200">
-              {filteredNetworkRequests.map((req) => {
-                const time = new Date(req.timestamp).toLocaleTimeString();
-                const urlParts = req.url.split('?');
-                const baseUrl = urlParts[0];
-                const queryString = urlParts[1];
+            <>
+              {/* Table Header */}
+              <div className="sticky top-0 bg-gray-100 border-b border-gray-300 px-2 py-1.5 flex items-center gap-3 text-xs font-semibold text-gray-700">
+                <span className="flex-shrink-0 w-16">Time</span>
+                <span className="flex-shrink-0 w-14">Method</span>
+                <span className="flex-shrink-0 w-12 text-center">Status</span>
+                <span className="flex-1 min-w-0">URL</span>
+                <span className="flex-shrink-0 w-16 text-right">Time</span>
+                <span className="flex-shrink-0 w-16">Type</span>
+              </div>
 
-                return (
-                  <div
-                    key={req.id}
-                    className={`p-2 hover:bg-gray-50 transition-colors ${
-                      req.error ? 'bg-red-50' :
-                      req.status >= 400 ? 'bg-orange-50' :
-                      req.status >= 300 ? 'bg-blue-50' :
-                      ''
-                    }`}
-                  >
-                    <div className="flex items-start gap-3 text-xs font-mono">
-                      <span className="text-gray-400 flex-shrink-0">{time}</span>
-                      <span className={`font-semibold flex-shrink-0 w-14 ${getMethodColor(req.method)}`}>
-                        {req.method}
-                      </span>
-                      <span className={`font-semibold flex-shrink-0 w-8 text-right ${getStatusColor(req.status)}`}>
-                        {req.status || '-'}
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <div className="truncate text-gray-700" title={req.url}>
-                          {baseUrl}
+              {/* Table Body */}
+              <div className="flex-1 divide-y divide-gray-200">
+                {filteredNetworkRequests.map((req) => {
+                  const time = new Date(req.timestamp).toLocaleTimeString();
+                  const urlParts = req.url.split('?');
+                  const baseUrl = urlParts[0];
+                  const queryString = urlParts[1];
+
+                  return (
+                    <div
+                      key={req.id}
+                      className={`px-2 py-1.5 hover:bg-gray-50 transition-colors ${
+                        req.error ? 'bg-red-50' :
+                        req.status >= 400 ? 'bg-orange-50' :
+                        req.status >= 300 ? 'bg-blue-50' :
+                        ''
+                      }`}
+                    >
+                      <div className="flex items-start gap-3 text-xs font-mono">
+                        <span className="text-gray-500 flex-shrink-0 w-16">{time}</span>
+                        <span className={`font-semibold flex-shrink-0 w-14 ${getMethodColor(req.method)}`}>
+                          {req.method}
+                        </span>
+                        <span className={`font-semibold flex-shrink-0 w-12 text-center ${getStatusColor(req.status)}`}>
+                          {req.status || '-'}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="truncate text-gray-700" title={req.url}>
+                            {baseUrl}
+                          </div>
+                          {queryString && (
+                            <div className="text-gray-400 text-[10px] truncate">?{queryString}</div>
+                          )}
                         </div>
-                        {queryString && (
-                          <div className="text-gray-400 text-[10px] truncate">?{queryString}</div>
-                        )}
+                        <span className="text-gray-500 flex-shrink-0 w-16 text-right">
+                          {req.duration}ms
+                        </span>
+                        <span className="text-gray-500 flex-shrink-0 w-16 text-[10px] uppercase">
+                          {req.type}
+                        </span>
                       </div>
-                      <span className="text-gray-400 flex-shrink-0 text-[10px]">
-                        {req.duration}ms
-                      </span>
-                      <span className="text-gray-400 flex-shrink-0 text-[10px] uppercase">
-                        {req.type}
-                      </span>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            </>
           )}
         </div>
       )}

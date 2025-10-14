@@ -38,31 +38,56 @@ export interface ChatSession {
   messages: ChatMessage[];
 }
 
+export interface QueuedTask {
+  id: string;
+  command: string;
+  selectedElements: Array<{
+    tag: string;
+    id: string;
+    classes: string;
+    path: string;
+    text: string;
+    url: string;
+    css: string;
+  }>;
+  iframeUrl: string;
+  isExpanded: boolean;
+  isEditing: boolean;
+  timestamp: number;
+}
+
+export interface PlaceholderInfo {
+  position: 'top' | 'right' | 'bottom' | 'left';
+  relativeToElement: {
+    tag: string;
+    id: string;
+    classes: string;
+    path: string;
+  };
+  placeholderId: string;
+}
+
 interface AppState {
   selectedElements: ElementInfo[];
   selectorMode: boolean;
-  panelPosition: { x: number; y: number };
-  isPanelAbove: boolean;
   elementTasks: ElementTaskState[];
   command: string;
   isStreaming: boolean;
   currentSessionId: string | null;
   sessions: ChatSession[];
   currentIframeUrl: string;
+  taskQueue: QueuedTask[];
+  placeholder: PlaceholderInfo | null;
 
   addSelectedElement: (info: ElementInfo) => void;
-  removeSelectedElement: (element: HTMLElement) => void;
   removeSelectedElementByIndex: (index: number) => void;
   clearSelectedElements: () => void;
   toggleSelectorMode: () => void;
-  setPanelPosition: (position: { x: number; y: number }) => void;
-  setPanelAbove: (above: boolean) => void;
   setElementTaskState: (element: HTMLElement, state: 'loading' | 'success' | 'error') => void;
   removeElementTask: (element: HTMLElement) => void;
   setCommand: (command: string) => void;
   setIsStreaming: (streaming: boolean) => void;
   startNewSession: () => void;
-  setCurrentSessionId: (id: string | null) => void;
   loadSessionsFromStorage: () => void;
   saveSessionsToStorage: () => void;
   getIsFirstMessage: () => boolean;
@@ -72,6 +97,16 @@ interface AppState {
   addToolMessage: (toolName: string, toolParams: Record<string, any>) => void;
   getCurrentMessages: () => ChatMessage[];
   setCurrentIframeUrl: (url: string) => void;
+  addToQueue: (command: string, selectedElements: ElementInfo[], iframeUrl: string) => void;
+  removeFromQueue: (id: string) => void;
+  getNextQueueItem: () => QueuedTask | null;
+  toggleQueueItemExpanded: (id: string) => void;
+  startEditingQueueItem: (id: string) => void;
+  updateQueueItemCommand: (id: string, newCommand: string) => void;
+  cancelEditingQueueItem: (id: string) => void;
+  isAnyQueueItemEditing: () => boolean;
+  setPlaceholder: (placeholder: PlaceholderInfo) => void;
+  clearPlaceholder: () => void;
 }
 
 // Helper to generate UUID v4
@@ -86,14 +121,14 @@ function generateUUID(): string {
 export const useAppStore = create<AppState>((set, get) => ({
   selectedElements: [],
   selectorMode: false,
-  panelPosition: { x: 20, y: 20 },
-  isPanelAbove: false,
   elementTasks: [],
   command: '',
   isStreaming: false,
   currentSessionId: null,
   sessions: [],
   currentIframeUrl: '',
+  taskQueue: [],
+  placeholder: null,
 
   addSelectedElement: (info) =>
     set((state) => {
@@ -104,27 +139,16 @@ export const useAppStore = create<AppState>((set, get) => ({
       return { selectedElements: [...state.selectedElements, info] };
     }),
 
-  removeSelectedElement: (element) =>
-    set((state) => ({
-      selectedElements: state.selectedElements.filter(e => e.element !== element)
-    })),
-
   removeSelectedElementByIndex: (index) =>
     set((state) => ({
       selectedElements: state.selectedElements.filter((_, i) => i !== index)
     })),
 
   clearSelectedElements: () =>
-    set({ selectedElements: [], command: '' }),
+    set({ selectedElements: [], command: '', placeholder: null }),
 
   toggleSelectorMode: () =>
     set((state) => ({ selectorMode: !state.selectorMode })),
-
-  setPanelPosition: (position) =>
-    set({ panelPosition: position }),
-
-  setPanelAbove: (above) =>
-    set({ isPanelAbove: above }),
 
   setElementTaskState: (element, state) =>
     set((store) => {
@@ -169,9 +193,6 @@ export const useAppStore = create<AppState>((set, get) => ({
 
     get().saveSessionsToStorage();
   },
-
-  setCurrentSessionId: (id) =>
-    set({ currentSessionId: id }),
 
   loadSessionsFromStorage: () => {
     try {
@@ -304,4 +325,77 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   setCurrentIframeUrl: (url) =>
     set({ currentIframeUrl: url }),
+
+  addToQueue: (command, selectedElements, iframeUrl) => {
+    const queuedTask: QueuedTask = {
+      id: generateUUID(),
+      command,
+      selectedElements: selectedElements.map(el => ({
+        tag: el.tag,
+        id: el.id,
+        classes: el.classes,
+        path: el.path,
+        text: el.text,
+        url: el.url,
+        css: el.css
+      })),
+      iframeUrl,
+      isExpanded: false,
+      isEditing: false,
+      timestamp: Date.now()
+    };
+
+    set((state) => ({
+      taskQueue: [...state.taskQueue, queuedTask]
+    }));
+  },
+
+  removeFromQueue: (id) =>
+    set((state) => ({
+      taskQueue: state.taskQueue.filter(task => task.id !== id)
+    })),
+
+  getNextQueueItem: () => {
+    const state = get();
+    return state.taskQueue.length > 0 ? state.taskQueue[0] : null;
+  },
+
+  toggleQueueItemExpanded: (id) =>
+    set((state) => ({
+      taskQueue: state.taskQueue.map(task =>
+        task.id === id ? { ...task, isExpanded: !task.isExpanded } : task
+      )
+    })),
+
+  startEditingQueueItem: (id) =>
+    set((state) => ({
+      taskQueue: state.taskQueue.map(task =>
+        task.id === id ? { ...task, isEditing: true } : task
+      )
+    })),
+
+  updateQueueItemCommand: (id, newCommand) =>
+    set((state) => ({
+      taskQueue: state.taskQueue.map(task =>
+        task.id === id ? { ...task, command: newCommand, isEditing: false } : task
+      )
+    })),
+
+  cancelEditingQueueItem: (id) =>
+    set((state) => ({
+      taskQueue: state.taskQueue.map(task =>
+        task.id === id ? { ...task, isEditing: false } : task
+      )
+    })),
+
+  isAnyQueueItemEditing: () => {
+    const state = get();
+    return state.taskQueue.some(task => task.isEditing);
+  },
+
+  setPlaceholder: (placeholder) =>
+    set({ placeholder }),
+
+  clearPlaceholder: () =>
+    set({ placeholder: null }),
 }));

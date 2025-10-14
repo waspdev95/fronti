@@ -1,4 +1,4 @@
-# Visual Editor AI
+# Fronti
 
 AI-powered visual editor for local development. Design and code your localhost projects with AI.
 
@@ -16,7 +16,7 @@ Like v0.dev or Bolt.new, but for **your local projects**. Edit your localhost ap
 
 ## Setup
 
-1. **Install VS Code extension** - Search "Visual Editor AI"
+1. **Install VS Code extension** - Search "Fronti"
 2. **Install Chrome extension**
 3. **Open your project in VS Code**
 4. Start editing with AI!

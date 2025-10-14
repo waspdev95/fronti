@@ -1,8 +1,10 @@
-# Visual Editor AI
+# Fronti
 
 **Visual-first AI coding agent for local codebases**
 
 Visual editing for local codebases using Claude Code agent. Open project in VS Code, run dev server, select elements in [Chrome extension](https://chromewebstore.google.com/detail/visual-editor-ai/jojjbmgmggenijlkhjeaiodfoggjcjgj), **describe changes** and AI agent handles coding.
+
+Like v0, bolt and loveable, but for your existing local projects with full control over your codebase.
 
 ---
 
@@ -12,7 +14,7 @@ Transform terminal coding into visual workflow. Select UI elements in browser an
 
 ---
 
-## Why Visual Editor AI?
+## Why Fronti?
 
 **Visual workflow** — Select UI elements in browser, describe changes, AI coding agent handles coding automatically.
 

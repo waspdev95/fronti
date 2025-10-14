@@ -1,6 +1,7 @@
 import ReactDOM from 'react-dom/client';
 import { Panel } from '../components/Panel';
 import { useAppStore } from '../store';
+import { getElementDisplayText } from '../utils/element-display';
 
 interface ElementInfo {
   tag: string;
@@ -30,6 +31,7 @@ export class ExtensionManager {
   private selectedOverlay: HTMLDivElement;
   private selectedLabel: HTMLDivElement;
   private parentPreviewOverlay: HTMLDivElement;
+  private addButtons: Map<string, HTMLButtonElement>;
   private currentHoverPath: string | null = null;
   private currentSelectedPath: string | null = null;
   private currentParentPreviewPath: string | null = null;
@@ -38,6 +40,7 @@ export class ExtensionManager {
   constructor(panelRoot: HTMLElement, iframe: HTMLIFrameElement, autoEnable: boolean = false) {
     this.root = ReactDOM.createRoot(panelRoot);
     this.iframe = iframe;
+    this.addButtons = new Map();
 
     // Create hover overlay
     this.hoverOverlay = document.createElement('div');
@@ -47,6 +50,9 @@ export class ExtensionManager {
 
     this.hoverLabel = document.createElement('div');
     this.hoverLabel.className = 'ave-overlay-label';
+    this.hoverLabel.innerHTML = `
+      <span class="ave-label-text-hover"></span>
+    `;
     this.hoverOverlay.appendChild(this.hoverLabel);
 
     // Create selected overlay with parent button
@@ -66,6 +72,39 @@ export class ExtensionManager {
       </button>
     `;
     this.selectedOverlay.appendChild(this.selectedLabel);
+
+    // Create add element buttons
+    const addBtnTop = document.createElement('button');
+    addBtnTop.className = 'ave-add-btn ave-add-btn-top';
+    addBtnTop.title = 'Add an element above';
+    addBtnTop.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>`;
+    addBtnTop.addEventListener('click', () => this.handleAddButtonClick('top'));
+    this.selectedOverlay.appendChild(addBtnTop);
+    this.addButtons.set('top', addBtnTop);
+
+    const addBtnRight = document.createElement('button');
+    addBtnRight.className = 'ave-add-btn ave-add-btn-right';
+    addBtnRight.title = 'Add an element to the right';
+    addBtnRight.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>`;
+    addBtnRight.addEventListener('click', () => this.handleAddButtonClick('right'));
+    this.selectedOverlay.appendChild(addBtnRight);
+    this.addButtons.set('right', addBtnRight);
+
+    const addBtnBottom = document.createElement('button');
+    addBtnBottom.className = 'ave-add-btn ave-add-btn-bottom';
+    addBtnBottom.title = 'Add an element below';
+    addBtnBottom.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>`;
+    addBtnBottom.addEventListener('click', () => this.handleAddButtonClick('bottom'));
+    this.selectedOverlay.appendChild(addBtnBottom);
+    this.addButtons.set('bottom', addBtnBottom);
+
+    const addBtnLeft = document.createElement('button');
+    addBtnLeft.className = 'ave-add-btn ave-add-btn-left';
+    addBtnLeft.title = 'Add an element to the left';
+    addBtnLeft.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>`;
+    addBtnLeft.addEventListener('click', () => this.handleAddButtonClick('left'));
+    this.selectedOverlay.appendChild(addBtnLeft);
+    this.addButtons.set('left', addBtnLeft);
 
     // Create parent preview overlay
     this.parentPreviewOverlay = document.createElement('div');
@@ -106,6 +145,7 @@ export class ExtensionManager {
   private subscribeToStore() {
     let previousSelectedElements: any[] = [];
     let previousSelectorMode = false;
+    let previousPlaceholder: any = null;
 
     useAppStore.subscribe((state) => {
       // Update selected overlay when selection changes
@@ -123,6 +163,21 @@ export class ExtensionManager {
           this.parentPreviewOverlay.style.display = 'none';
         }
         previousSelectorMode = state.selectorMode;
+      }
+
+      // Handle placeholder changes - update button active state
+      if (state.placeholder !== previousPlaceholder) {
+        // Remove active class from all buttons
+        this.addButtons.forEach(btn => btn.classList.remove('active'));
+
+        // Add active class to selected button
+        if (state.placeholder) {
+          const activeBtn = this.addButtons.get(state.placeholder.position);
+          if (activeBtn) {
+            activeBtn.classList.add('active');
+          }
+        }
+        previousPlaceholder = state.placeholder;
       }
     });
   }
@@ -181,7 +236,7 @@ export class ExtensionManager {
     // Update label text
     const labelText = this.selectedLabel.querySelector('.ave-label-text');
     if (labelText) {
-      labelText.textContent = this.getDisplayText(lastSelected);
+      labelText.textContent = getElementDisplayText(lastSelected);
     }
 
     // Request initial position from iframe
@@ -189,16 +244,6 @@ export class ExtensionManager {
       type: 'AVE_REQUEST_POSITION',
       path: lastSelected.path
     }, '*');
-  }
-
-  /**
-   * Get display text for element
-   */
-  private getDisplayText(element: { tag: string; id: string; classes: string }): string {
-    const tag = element.tag;
-    const id = element.id ? `#${element.id}` : '';
-    const classes = element.classes ? `.${element.classes.split('.').filter(c => c && !c.startsWith('ave-')).slice(0, 2).join('.')}` : '';
-    return `${tag}${id}${classes}`;
   }
 
   /**
@@ -221,8 +266,11 @@ export class ExtensionManager {
 
     this.currentHoverPath = element.path;
 
-    // Update label
-    this.hoverLabel.textContent = this.getDisplayText(element);
+    // Update label text (use the span)
+    const labelTextSpan = this.hoverLabel.querySelector('.ave-label-text-hover');
+    if (labelTextSpan) {
+      labelTextSpan.textContent = getElementDisplayText(element);
+    }
 
     // Position overlay
     this.positionOverlay(this.hoverOverlay, element);
@@ -241,12 +289,16 @@ export class ExtensionManager {
     // If there are already selected elements and not shift-clicking, clear selection and show hover
     if (store.selectedElements.length > 0 && !shiftKey) {
       store.clearSelectedElements();
+      store.clearPlaceholder();
       this.selectedOverlay.style.display = 'none';
       this.parentPreviewOverlay.style.display = 'none';
 
       // Show hover overlay on clicked element immediately
       this.currentHoverPath = element.path;
-      this.hoverLabel.textContent = this.getDisplayText(element);
+      const labelTextSpan = this.hoverLabel.querySelector('.ave-label-text-hover');
+      if (labelTextSpan) {
+        labelTextSpan.textContent = getElementDisplayText(element);
+      }
       this.positionOverlay(this.hoverOverlay, element);
       this.hoverOverlay.style.display = 'block';
 
@@ -268,8 +320,8 @@ export class ExtensionManager {
     // Add element
     store.addSelectedElement(elementInfo);
 
-    // Disable selector mode after selection
-    store.selectorMode = false;
+    // Don't disable selector mode - keep it active for better workflow
+    // User can now immediately select another element or submit the command
 
     // Hide hover overlay
     this.hoverOverlay.style.display = 'none';
@@ -287,6 +339,7 @@ export class ExtensionManager {
   public handleEscape() {
     const store = useAppStore.getState();
     store.clearSelectedElements();
+    store.clearPlaceholder();
     this.selectedOverlay.style.display = 'none';
     this.parentPreviewOverlay.style.display = 'none';
   }
@@ -411,5 +464,28 @@ export class ExtensionManager {
       }
     }
   }
+
+  /**
+   * Handle add button click - set placeholder position
+   */
+  private handleAddButtonClick = (position: 'top' | 'right' | 'bottom' | 'left') => {
+    const store = useAppStore.getState();
+
+    if (!this.currentSelectedPath || store.selectedElements.length === 0) return;
+
+    const selectedElement = store.selectedElements[store.selectedElements.length - 1];
+
+    // Set placeholder in store (button will get active class via subscribeToStore)
+    store.setPlaceholder({
+      position,
+      relativeToElement: {
+        tag: selectedElement.tag,
+        id: selectedElement.id,
+        classes: selectedElement.classes,
+        path: selectedElement.path
+      },
+      placeholderId: `ave-placeholder-${Date.now()}`
+    });
+  };
 
 }
