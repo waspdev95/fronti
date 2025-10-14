@@ -64,7 +64,7 @@ Both work together to enable visual-first AI coding.
 ## 📋 Requirements
 
 - **Node.js** 18 or higher
-- **VS Code** with [Claude Code](https://docs.anthropic.com/claude-code) installed and authenticated
+- **VS Code** with Claude Code installed and authenticated
 - **Chrome** browser (or Chromium-based)
 - **Claude API key** from [Anthropic Console](https://console.anthropic.com/)
 
@@ -128,7 +128,6 @@ If Fronti helps your development workflow, please ⭐ **star this repo**!
 
 - [Chrome Extension](https://chromewebstore.google.com/detail/visual-editor-ai/jojjbmgmggenijlkhjeaiodfoggjcjgj)
 - [VS Code Extension](https://marketplace.visualstudio.com/items?itemName=VisualEditor.visual-editor-ai)
-- [Claude Code Docs](https://docs.anthropic.com/claude-code)
 
 ---
 

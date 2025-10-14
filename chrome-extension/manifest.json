@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Fronti",
+  "name": "Fronti AI",
   "version": "1.0.2",
-  "description": "Fronti for local development - design and code your projects with AI",
+  "description": "Visual-first AI coding agent for local development - design and code your projects with AI",
   "icons": {
     "16": "icon16.png",
     "48": "icon48.png",
@@ -17,7 +17,7 @@
     "<all_urls>"
   ],
   "action": {
-    "default_title": "Open Fronti"
+    "default_title": "Open Fronti AI"
   },
   "background": {
     "service_worker": "src/background.ts",
