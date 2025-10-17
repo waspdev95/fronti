@@ -6,9 +6,6 @@ import React, { useEffect, useRef } from 'react';
 
 interface StreamHandlers {
   setIsStreaming: (streaming: boolean) => void;
-  selectedElements: any[];
-  setElementTaskState: (element: any, state: string) => void;
-  removeElementTask: (element: any) => void;
   addAssistantMessage: (message: string) => void;
   addToolMessage: (toolName: string, toolParams: any) => void;
   getNextQueueItem: () => any;
@@ -26,6 +23,7 @@ export function useClaudeStream(
 ) {
   // Track processed blocks to prevent duplicates
   const processedBlocksRef = React.useRef(new Set<string>());
+  const currentMessageIdRef = React.useRef<string | null>(null);
 
   useEffect(() => {
     const handleStreamMessage = (message: any) => {
@@ -34,6 +32,20 @@ export function useClaudeStream(
 
         if (streamData.type === 'stream_event' && streamData.event) {
           const event = streamData.event;
+
+          if (event.type === 'message_start') {
+            currentMessageIdRef.current =
+              event.message?.id ??
+              event.message_id ??
+              `${Date.now()}-${Math.random()}`;
+
+            processedBlocksRef.current.clear();
+            streamingTextRef.current = '';
+            setStreamingText('');
+            toolInputRef.current = '';
+            currentBlockRef.current = null;
+            return;
+          }
 
           // Track content blocks
           if (event.type === 'content_block_start') {
@@ -64,7 +76,9 @@ export function useClaudeStream(
           }
           // Save completed blocks
           else if (event.type === 'content_block_stop') {
-            const blockKey = `${event.index}-${currentBlockRef.current?.type}`;
+            const messageId = currentMessageIdRef.current ?? 'default';
+            const blockType = currentBlockRef.current?.type ?? 'unknown';
+            const blockKey = `${messageId}:${event.index}-${blockType}`;
 
             // Skip if already processed
             if (processedBlocksRef.current.has(blockKey)) {
@@ -91,6 +105,7 @@ export function useClaudeStream(
         }
       } else if (message.type === 'CLAUDE_COMPLETE') {
         handlersRef.current.setIsStreaming(false);
+        currentMessageIdRef.current = null;
 
         // Save any remaining text (only if not already saved)
         if (streamingTextRef.current.trim()) {
@@ -103,16 +118,6 @@ export function useClaudeStream(
         toolInputRef.current = '';
         currentBlockRef.current = null;
         processedBlocksRef.current.clear(); // Clear for next session
-
-        handlersRef.current.selectedElements.forEach(info => {
-          handlersRef.current.setElementTaskState(info.element, message.success ? 'success' : 'error');
-        });
-
-        setTimeout(() => {
-          handlersRef.current.selectedElements.forEach(info => {
-            handlersRef.current.removeElementTask(info.element);
-          });
-        }, 3000);
 
         // Execute next queued task if not editing
         const isEditing = handlersRef.current.isAnyQueueItemEditing();
@@ -133,20 +138,11 @@ export function useClaudeStream(
         }
       } else if (message.type === 'CLAUDE_ERROR') {
         handlersRef.current.setIsStreaming(false);
+        currentMessageIdRef.current = null;
 
         if (message.error) {
           handlersRef.current.addAssistantMessage(`Error: ${message.error}`);
         }
-
-        handlersRef.current.selectedElements.forEach(info => {
-          handlersRef.current.setElementTaskState(info.element, 'error');
-        });
-
-        setTimeout(() => {
-          handlersRef.current.selectedElements.forEach(info => {
-            handlersRef.current.removeElementTask(info.element);
-          });
-        }, 3000);
 
         // Execute next task even after error
         const isEditing = handlersRef.current.isAnyQueueItemEditing();

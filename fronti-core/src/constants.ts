@@ -1,9 +1,5 @@
-/**
- * Application constants
- */
-
-export const NATIVE_HOST_NAME = 'com.ai_visual_editor.host';
-export const CONFIG_DIR_NAME = '.ai-visual-editor';
+export const NATIVE_HOST_NAME = 'com.fronti.core';
+export const CONFIG_DIR_NAME = '.fronti';
 export const WORKSPACE_CONFIG_FILE = 'workspace.json';
 
 export const REGISTRY_PATHS = {

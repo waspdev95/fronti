@@ -111,7 +111,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
         dotColor = 'bg-green-500';
         break;
 
-      case 'Bash':
+      case 'Bash': {
         toolLabel = 'Run';
         const command = message.toolParams?.command || '';
         displayText = command.length > 40 ? command.substring(0, 40) + '...' : command;
@@ -123,8 +123,9 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
         );
         dotColor = 'bg-purple-500';
         break;
+      }
 
-      case 'TodoWrite':
+      case 'TodoWrite': {
         toolLabel = 'Tasks';
         const todos = message.toolParams?.todos || [];
         const todoCount = todos.length;
@@ -157,6 +158,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
         );
         dotColor = 'bg-orange-500';
         break;
+      }
 
       case 'Grep':
         toolLabel = 'Search';

@@ -5,12 +5,14 @@ KEY FEATURES
 - Full access to Claude Code's agent capabilities for refactors, API integrations, logic changes, and test generation
 - Works with React, Next.js, Vue, Astro, Svelte, Tailwind, and any web stack
 - Instant previews with live reload
-- Secure integration with Fronti VS Code Extension
+- Simple setup with npm package
 
 HOW IT WORKS
-1. Install this Chrome extension, the Fronti VS Code Extension, and Claude Code CLI (`npm install -g @anthropic-ai/claude-code`)
-2. Start your project on localhost and open Fronti in Chrome
-3. Select any element, describe what you want, and Claude updates your files instantly
+1. Install this Chrome extension
+2. Install @fronti/core: `npm install -g @fronti/core`
+3. Install Claude Code CLI: `npm install -g @anthropic-ai/claude-code`
+4. Start your project on localhost and open Fronti
+5. Select any element, describe what you want, and Claude updates your files instantly
 
 WHY FRONTI
 - Ship UI and feature updates in minutes
@@ -19,6 +21,6 @@ WHY FRONTI
 - No context switching between tools
 
 REQUIREMENTS
-- VS Code with Fronti VS Code Extension
+- @fronti/core npm package OR Fronti VS Code Extension
 - Claude Code CLI from Anthropic
 - Local dev server running your project

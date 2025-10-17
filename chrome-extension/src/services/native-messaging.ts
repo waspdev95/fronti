@@ -3,10 +3,11 @@
  * Handles communication with native host (VSCode extension)
  */
 
-const NATIVE_HOST_NAME = 'com.ai_visual_editor.host';
+const NATIVE_HOST_NAME = 'com.fronti.core';
 
 // Track active ports for cleanup
 const activePorts = new Set<chrome.runtime.Port>();
+let currentStreamPort: chrome.runtime.Port | null = null;
 
 /**
  * Cleanup function for ports
@@ -56,6 +57,7 @@ export function executeClaude(
   sendResponse: (response: any) => void
 ): void {
   const port = connectToNativeHost();
+  currentStreamPort = port;
 
   // Broadcast stream messages to extension context
   port.onMessage.addListener((response) => {
@@ -85,6 +87,7 @@ export function executeClaude(
       });
 
       // Cleanup port after completion
+      currentStreamPort = null;
       cleanupPort(port);
     } else if (response.type === 'error') {
       // Error occurred - broadcast error
@@ -99,6 +102,7 @@ export function executeClaude(
       });
 
       // Cleanup port after error
+      currentStreamPort = null;
       cleanupPort(port);
     }
   });
@@ -106,6 +110,9 @@ export function executeClaude(
   port.onDisconnect.addListener(() => {
     const error = chrome.runtime.lastError;
     activePorts.delete(port);
+    if (port === currentStreamPort) {
+      currentStreamPort = null;
+    }
 
     if (error) {
       chrome.runtime.sendMessage({
@@ -255,5 +262,16 @@ export function checkAll(sendResponse: (response: any) => void): void {
         error: 'Cannot check - exception occurred'
       }
     });
+  }
+}
+
+/**
+ * Stop current streaming operation
+ */
+export function stopStream(): void {
+  if (currentStreamPort) {
+    console.log('[STOP_STREAM] Stopping current stream...');
+    cleanupPort(currentStreamPort);
+    currentStreamPort = null;
   }
 }

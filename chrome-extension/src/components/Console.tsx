@@ -322,7 +322,7 @@ export const Console = ({ onClose, messages, networkRequests, onClearConsole, on
 
       {/* Console Messages */}
       {activeTab === 'console' && (
-        <div ref={consoleRef} className="flex-1 overflow-y-auto p-2 space-y-0.5 font-mono text-xs">
+        <div ref={consoleRef} className="flex-1 overflow-y-auto p-2 space-y-0.5 text-xs">
           {filteredConsoleMessages.length === 0 ? (
             <div className="flex items-center justify-center h-full text-gray-400 text-sm">
               {messages.length === 0 ? 'Console messages will appear here' : 'No messages match the filter'}
@@ -412,7 +412,7 @@ export const Console = ({ onClose, messages, networkRequests, onClearConsole, on
                         ''
                       }`}
                     >
-                      <div className="flex items-start gap-3 text-xs font-mono">
+                      <div className="flex items-start gap-3 text-xs">
                         <span className="text-gray-500 flex-shrink-0 w-16">{time}</span>
                         <span className={`font-semibold flex-shrink-0 w-14 ${getMethodColor(req.method)}`}>
                           {req.method}

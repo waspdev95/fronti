@@ -1,17 +1,10 @@
-/**
- * Platform-specific native host registration
- */
-
 import * as path from 'path';
 import * as fs from 'fs';
 import * as os from 'os';
 import { execSync } from 'child_process';
-import { NATIVE_HOST_NAME, REGISTRY_PATHS } from '../constants';
-import type { Platform } from '../types';
+import { NATIVE_HOST_NAME, REGISTRY_PATHS } from './constants';
+import type { Platform } from './types';
 
-/**
- * Register native host with Chrome browser
- */
 export function registerNativeHost(manifestPath: string, platform: Platform): void {
   switch (platform) {
     case 'win32':
@@ -26,9 +19,6 @@ export function registerNativeHost(manifestPath: string, platform: Platform): vo
   }
 }
 
-/**
- * Unregister native host from Chrome browser
- */
 export function unregisterNativeHost(platform: Platform): void {
   try {
     switch (platform) {
@@ -43,13 +33,10 @@ export function unregisterNativeHost(platform: Platform): void {
         break;
     }
   } catch {
-    // Silently fail
+    // Ignore errors during cleanup
   }
 }
 
-/**
- * Windows registration via registry
- */
 function registerWindows(manifestPath: string): void {
   const regPath = REGISTRY_PATHS.windows;
   execSync(`reg add "${regPath}" /ve /t REG_SZ /d "${manifestPath}" /f`, {
@@ -59,9 +46,6 @@ function registerWindows(manifestPath: string): void {
   });
 }
 
-/**
- * macOS registration via file copy
- */
 function registerMac(manifestPath: string): void {
   const targetDir = path.join(os.homedir(), REGISTRY_PATHS.darwin);
   ensureDirectoryExists(targetDir);
@@ -70,9 +54,6 @@ function registerMac(manifestPath: string): void {
   fs.copyFileSync(manifestPath, targetPath);
 }
 
-/**
- * Linux registration via file copy
- */
 function registerLinux(manifestPath: string): void {
   const targetDir = path.join(os.homedir(), REGISTRY_PATHS.linux);
   ensureDirectoryExists(targetDir);
@@ -81,9 +62,6 @@ function registerLinux(manifestPath: string): void {
   fs.copyFileSync(manifestPath, targetPath);
 }
 
-/**
- * Windows unregistration
- */
 function unregisterWindows(): void {
   const regPath = REGISTRY_PATHS.windows;
   try {
@@ -97,9 +75,6 @@ function unregisterWindows(): void {
   }
 }
 
-/**
- * macOS unregistration
- */
 function unregisterMac(): void {
   const manifestPath = path.join(
     os.homedir(),
@@ -113,9 +88,6 @@ function unregisterMac(): void {
   }
 }
 
-/**
- * Linux unregistration
- */
 function unregisterLinux(): void {
   const manifestPath = path.join(
     os.homedir(),
@@ -129,9 +101,6 @@ function unregisterLinux(): void {
   }
 }
 
-/**
- * Ensure directory exists, create if not
- */
 function ensureDirectoryExists(dir: string): void {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });

@@ -25,19 +25,22 @@ export const Settings = () => {
   };
 
   const handleToggleAll = () => {
-    const allEnabled = Object.values(settings.toolPermissions).every(v => v);
+    const visiblePermissions = [
+      settings.toolPermissions.read,
+      settings.toolPermissions.write,
+      settings.toolPermissions.edit,
+      settings.toolPermissions.bash,
+    ];
+    const allEnabled = visiblePermissions.every(v => v);
     const newState = !allEnabled;
 
     updateSettings({
       toolPermissions: {
+        ...settings.toolPermissions,
         read: newState,
         write: newState,
         edit: newState,
         bash: newState,
-        grep: newState,
-        glob: newState,
-        webSearch: newState,
-        webFetch: newState,
       },
     });
   };
@@ -49,21 +52,22 @@ export const Settings = () => {
     }
   };
 
-  const allEnabled = Object.values(settings.toolPermissions).every(v => v);
+  const allEnabled = [
+    settings.toolPermissions.read,
+    settings.toolPermissions.write,
+    settings.toolPermissions.edit,
+    settings.toolPermissions.bash,
+  ].every(v => v);
 
   return (
     <div className="flex flex-col gap-6">
       {/* Project Section */}
-      <div className="flex flex-col gap-3">
-        <div>
-          <label className="text-sm font-semibold text-gray-900">Project Path</label>
-          <p className="text-xs text-gray-500 mt-0.5">Enter or paste your project folder path</p>
-        </div>
-
+      <div className="flex flex-col">
+        <label className="text-sm font-semibold text-gray-900 mb-2">Project Path</label>
         <div className="flex gap-2">
           <input
             type="text"
-            className="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-md text-sm font-mono focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 transition-all hover:border-gray-300"
+            className="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 transition-all hover:border-gray-300"
             value={settings.projectPath}
             onChange={(e) => handleProjectPathChange(e.target.value)}
             placeholder="C:\Users\project"
@@ -76,37 +80,28 @@ export const Settings = () => {
             <Folder size={16} />
           </button>
         </div>
+        <p className="text-xs text-gray-500 mt-1">Enter or paste your project folder path</p>
       </div>
 
-      <div className="border-t border-gray-100" />
-
       {/* Development Server Section */}
-      <div className="flex flex-col gap-3">
-        <div>
-          <label className="text-sm font-semibold text-gray-900">Development Server</label>
-          <p className="text-xs text-gray-500 mt-0.5">URL of your local development server</p>
-        </div>
-
+      <div className="flex flex-col">
+        <label className="text-sm font-semibold text-gray-900 mb-2">Development Server</label>
         <input
           type="text"
-          className="px-3 py-2 bg-white border border-gray-200 rounded-md text-sm font-mono focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 transition-all hover:border-gray-300"
+          className="px-3 py-2 bg-white border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 transition-all hover:border-gray-300"
           value={settings.localhostUrl}
           onChange={(e) => handleLocalhostUrlChange(e.target.value)}
           placeholder="http://localhost:3000"
         />
+        <p className="text-xs text-gray-500 mt-1">URL of your local development server</p>
       </div>
-
-      <div className="border-t border-gray-100" />
 
       {/* Claude Code Permissions Section */}
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <div>
-            <label className="text-sm font-semibold text-gray-900">Claude Code Permissions</label>
-            <p className="text-xs text-gray-500 mt-0.5">Control which tools Claude Code can use</p>
-          </div>
+          <label className="text-sm font-semibold text-gray-900">Permissions</label>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-600">{allEnabled ? 'All enabled' : 'Enable all'}</span>
+            <span className="text-sm font-medium text-gray-900">{allEnabled ? 'All enabled' : 'Enable all'}</span>
             <Switch.Root
               checked={allEnabled}
               onCheckedChange={handleToggleAll}
@@ -132,7 +127,7 @@ export const Settings = () => {
               </Checkbox.Root>
               <label htmlFor="permission-read" className="flex-1 text-sm cursor-pointer select-none">
                 <span className="font-medium text-gray-900">Read</span>
-                <span className="text-gray-500 ml-1.5">View file contents</span>
+                <span className="text-gray-500 ml-1.5 text-xs">View file contents</span>
               </label>
             </div>
 
@@ -150,7 +145,7 @@ export const Settings = () => {
               </Checkbox.Root>
               <label htmlFor="permission-write" className="flex-1 text-sm cursor-pointer select-none">
                 <span className="font-medium text-gray-900">Write</span>
-                <span className="text-gray-500 ml-1.5">Create new files</span>
+                <span className="text-gray-500 ml-1.5 text-xs">Create new files</span>
               </label>
             </div>
 
@@ -168,7 +163,7 @@ export const Settings = () => {
               </Checkbox.Root>
               <label htmlFor="permission-edit" className="flex-1 text-sm cursor-pointer select-none">
                 <span className="font-medium text-gray-900">Edit</span>
-                <span className="text-gray-500 ml-1.5">Modify existing files</span>
+                <span className="text-gray-500 ml-1.5 text-xs">Modify existing files</span>
               </label>
             </div>
 
@@ -186,79 +181,7 @@ export const Settings = () => {
               </Checkbox.Root>
               <label htmlFor="permission-bash" className="flex-1 text-sm cursor-pointer select-none">
                 <span className="font-medium text-red-600">Bash</span>
-                <span className="text-gray-500 ml-1.5">Execute terminal commands</span>
-              </label>
-            </div>
-
-            {/* Grep */}
-            <div className="flex items-center gap-3 group">
-              <Checkbox.Root
-                id="permission-grep"
-                checked={settings.toolPermissions.grep}
-                onCheckedChange={(checked) => handlePermissionChange('grep', checked as boolean)}
-                className="w-5 h-5 bg-white border-2 border-gray-300 rounded-md flex items-center justify-center cursor-pointer hover:border-gray-400 transition-colors data-[state=checked]:bg-gray-900 data-[state=checked]:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"
-              >
-                <Checkbox.Indicator>
-                  <Check size={14} className="text-white" strokeWidth={3} />
-                </Checkbox.Indicator>
-              </Checkbox.Root>
-              <label htmlFor="permission-grep" className="flex-1 text-sm cursor-pointer select-none">
-                <span className="font-medium text-gray-900">Grep</span>
-                <span className="text-gray-500 ml-1.5">Search file contents</span>
-              </label>
-            </div>
-
-            {/* Glob */}
-            <div className="flex items-center gap-3 group">
-              <Checkbox.Root
-                id="permission-glob"
-                checked={settings.toolPermissions.glob}
-                onCheckedChange={(checked) => handlePermissionChange('glob', checked as boolean)}
-                className="w-5 h-5 bg-white border-2 border-gray-300 rounded-md flex items-center justify-center cursor-pointer hover:border-gray-400 transition-colors data-[state=checked]:bg-gray-900 data-[state=checked]:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"
-              >
-                <Checkbox.Indicator>
-                  <Check size={14} className="text-white" strokeWidth={3} />
-                </Checkbox.Indicator>
-              </Checkbox.Root>
-              <label htmlFor="permission-glob" className="flex-1 text-sm cursor-pointer select-none">
-                <span className="font-medium text-gray-900">Glob</span>
-                <span className="text-gray-500 ml-1.5">Find files by pattern</span>
-              </label>
-            </div>
-
-            {/* WebSearch */}
-            <div className="flex items-center gap-3 group">
-              <Checkbox.Root
-                id="permission-websearch"
-                checked={settings.toolPermissions.webSearch}
-                onCheckedChange={(checked) => handlePermissionChange('webSearch', checked as boolean)}
-                className="w-5 h-5 bg-white border-2 border-gray-300 rounded-md flex items-center justify-center cursor-pointer hover:border-gray-400 transition-colors data-[state=checked]:bg-gray-900 data-[state=checked]:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"
-              >
-                <Checkbox.Indicator>
-                  <Check size={14} className="text-white" strokeWidth={3} />
-                </Checkbox.Indicator>
-              </Checkbox.Root>
-              <label htmlFor="permission-websearch" className="flex-1 text-sm cursor-pointer select-none">
-                <span className="font-medium text-gray-900">WebSearch</span>
-                <span className="text-gray-500 ml-1.5">Search the web</span>
-              </label>
-            </div>
-
-            {/* WebFetch */}
-            <div className="flex items-center gap-3 group">
-              <Checkbox.Root
-                id="permission-webfetch"
-                checked={settings.toolPermissions.webFetch}
-                onCheckedChange={(checked) => handlePermissionChange('webFetch', checked as boolean)}
-                className="w-5 h-5 bg-white border-2 border-gray-300 rounded-md flex items-center justify-center cursor-pointer hover:border-gray-400 transition-colors data-[state=checked]:bg-gray-900 data-[state=checked]:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"
-              >
-                <Checkbox.Indicator>
-                  <Check size={14} className="text-white" strokeWidth={3} />
-                </Checkbox.Indicator>
-              </Checkbox.Root>
-              <label htmlFor="permission-webfetch" className="flex-1 text-sm cursor-pointer select-none">
-                <span className="font-medium text-gray-900">WebFetch</span>
-                <span className="text-gray-500 ml-1.5">Fetch web content</span>
+                <span className="text-gray-500 ml-1.5 text-xs">Execute terminal commands</span>
               </label>
             </div>
         </div>

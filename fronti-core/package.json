@@ -1,0 +1,37 @@
+{
+  "name": "@fronti/core",
+  "version": "1.0.1",
+  "description": "Visual-first AI coding agent for local codebases. Select elements in browser, describe changes, agent applies edits.",
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "bin": {
+    "fronti-core": "dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "runtime"
+  ],
+  "scripts": {
+    "build": "tsc -p ./tsconfig.json",
+    "clean": "rimraf dist",
+    "prepare": "npm run build",
+    "postinstall": "node ./dist/cli.js auto-install || true"
+  },
+  "keywords": [
+    "fronti",
+    "native-messaging",
+    "claude",
+    "chrome"
+  ],
+  "author": "Fronti",
+  "license": "MIT",
+  "dependencies": {
+    "yargs": "^17.7.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.16.11",
+    "@types/yargs": "^17.0.33",
+    "rimraf": "^5.0.10",
+    "typescript": "^5.6.3"
+  }
+}

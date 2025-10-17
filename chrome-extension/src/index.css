@@ -11,3 +11,11 @@
 * {
   box-sizing: border-box;
 }
+
+body,
+input,
+textarea,
+select,
+button {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}

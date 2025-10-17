@@ -1,29 +1,18 @@
 /**
  * Fronti VS Code Extension
  *
- * Main extension entry point that coordinates workspace management,
- * native host installation, and webview providers.
+ * Main entry point that coordinates native host installation and webview providers.
  */
 
 import * as vscode from 'vscode';
-import * as os from 'os';
 import { ChromeExtensionProvider } from './chromeExtensionView';
-import { saveWorkspaceInfo, cleanupWorkspaceInfo } from './utils/workspace';
-import { installNativeHost } from './native-host/installer';
-import { unregisterNativeHost } from './native-host/registry';
-import type { Platform } from './types';
+import { ensureNativeHostInstalled } from './nativeHostInstaller';
 
 /**
  * Extension activation
  * Called when extension is first activated
  */
-export function activate(context: vscode.ExtensionContext): void {
-  // Install native messaging host
-  installNativeHost(context);
-
-  // Save initial workspace info
-  saveWorkspaceInfo();
-
+export async function activate(context: vscode.ExtensionContext): Promise<void> {
   // Register webview provider for getting started view
   const chromeExtensionProvider = new ChromeExtensionProvider(context.extensionUri);
   context.subscriptions.push(
@@ -33,19 +22,7 @@ export function activate(context: vscode.ExtensionContext): void {
     )
   );
 
-  // Watch for workspace changes
-  context.subscriptions.push(
-    vscode.workspace.onDidChangeWorkspaceFolders(() => {
-      saveWorkspaceInfo();
-    })
-  );
-
-  // Watch for active editor changes
-  context.subscriptions.push(
-    vscode.window.onDidChangeActiveTextEditor(() => {
-      saveWorkspaceInfo();
-    })
-  );
+  await ensureNativeHostInstalled();
 }
 
 /**
@@ -53,10 +30,5 @@ export function activate(context: vscode.ExtensionContext): void {
  * Called when extension is deactivated
  */
 export function deactivate(): void {
-  try {
-    cleanupWorkspaceInfo();
-    unregisterNativeHost(os.platform() as Platform);
-  } catch {
-    // Silently fail - extension is deactivating
-  }
+  // No-op: native host remains installed so CLI keeps working even if the extension unloads.
 }

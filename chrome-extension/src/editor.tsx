@@ -1,9 +1,6 @@
 import { createRoot } from 'react-dom/client';
 import { useState, useEffect } from 'react';
-import * as Dialog from '@radix-ui/react-dialog';
-import { Settings as SettingsIcon } from 'lucide-react';
 import { Onboarding } from './components/Onboarding';
-import { Settings } from './components/Settings';
 import { PreviewBar } from './components/PreviewBar';
 import { Console } from './components/Console';
 import { useSettings } from './hooks/useSettings';
@@ -11,6 +8,10 @@ import { useAppStore } from './store';
 import { useNavigation } from './hooks/useNavigation';
 import { useResize } from './hooks/useResize';
 import { useIframeManager } from './hooks/useIframeManager';
+import '@fontsource/inter/400.css';
+import '@fontsource/inter/500.css';
+import '@fontsource/inter/600.css';
+import '@fontsource/inter/700.css';
 import './index.css';
 
 /**
@@ -32,6 +33,19 @@ function App() {
       }
       setIsLoading(false);
     });
+
+    // Listen for storage changes (e.g., when localhostUrl is updated in Settings)
+    const handleStorageChange = (changes: { [key: string]: chrome.storage.StorageChange }) => {
+      if (changes.localhostUrl) {
+        setLocalhostUrl(changes.localhostUrl.newValue);
+      }
+    };
+
+    chrome.storage.onChanged.addListener(handleStorageChange);
+
+    return () => {
+      chrome.storage.onChanged.removeListener(handleStorageChange);
+    };
   }, []);
 
   const handleOnboardingComplete = (projectPath: string, url: string) => {
@@ -63,7 +77,6 @@ function App() {
 
 function Editor({ targetUrl }: { targetUrl: string }) {
   const [iframeRef, setIframeRef] = useState<HTMLIFrameElement | null>(null);
-  const [showSettings, setShowSettings] = useState(false);
   const [panelHidden, setPanelHidden] = useState(false);
   const [consoleOpen, setConsoleOpen] = useState(false);
   const [consoleMessages, setConsoleMessages] = useState<any[]>([]);
@@ -88,6 +101,14 @@ function Editor({ targetUrl }: { targetUrl: string }) {
     setConsoleMessages,
     setNetworkRequests
   );
+
+  // Update iframe URL when targetUrl changes
+  useEffect(() => {
+    if (iframeRef && targetUrl) {
+      iframeRef.src = targetUrl;
+      setCurrentIframeUrl(targetUrl);
+    }
+  }, [targetUrl]);
 
   // Get last folder name from project path
   const getProjectFolderName = () => {
@@ -117,6 +138,15 @@ function Editor({ targetUrl }: { targetUrl: string }) {
       key: 'v',
       description: 'Toggle Inspector (V)',
       action: handleToggleInspector,
+    });
+
+    manager.register('stop-streaming', {
+      key: 'Escape',
+      description: 'Stop streaming (ESC)',
+      allowInInput: true,
+      action: () => {
+        window.dispatchEvent(new Event('stop-streaming'));
+      },
     });
 
     // Listen for keyboard events from main window
@@ -155,17 +185,6 @@ function Editor({ targetUrl }: { targetUrl: string }) {
             </span>
           )}
         </div>
-        <button
-          onClick={() => setShowSettings(!showSettings)}
-          className={`${
-            showSettings
-              ? 'bg-gray-900 text-white'
-              : 'bg-white text-gray-700 hover:bg-gray-50'
-          } border border-gray-200 rounded-md p-1.5 cursor-pointer flex items-center justify-center transition-all duration-150 shadow-sm`}
-          title="Settings"
-        >
-          <SettingsIcon size={18} />
-        </button>
       </div>
 
       {/* Main Content */}
@@ -259,24 +278,6 @@ function Editor({ targetUrl }: { targetUrl: string }) {
             </div>
           </div>
         </div>
-
-        {/* Settings Modal */}
-        <Dialog.Root open={showSettings} onOpenChange={setShowSettings}>
-          <Dialog.Portal>
-            <Dialog.Overlay className="fixed inset-0 bg-black/80 z-[999]" />
-            <Dialog.Content className="fixed top-0 right-0 bottom-0 w-[420px] bg-white border-l border-gray-200 shadow-2xl z-[1000] overflow-auto p-6 focus:outline-none">
-              <div className="mb-6 flex items-center justify-between">
-                <Dialog.Title className="m-0 text-lg font-semibold text-gray-900">
-                  Settings
-                </Dialog.Title>
-                <Dialog.Close className="bg-transparent border-none text-xl cursor-pointer px-2 py-1 leading-none text-gray-500 rounded-md hover:bg-gray-50 transition-colors">
-                  ×
-                </Dialog.Close>
-              </div>
-              <Settings />
-            </Dialog.Content>
-          </Dialog.Portal>
-        </Dialog.Root>
       </div>
     </div>
   );

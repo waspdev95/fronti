@@ -9,16 +9,20 @@ Fronti brings Claude Code's powerful agent capabilities into your browser. Point
 
 ## Quick start
 
-1. Install Claude Code CLI
+1. Install the Chrome extension
+   [Fronti Chrome Extension](https://chromewebstore.google.com/detail/visual-editor-ai/jojjbmgmggenijlkhjeaiodfoggjcjgj)
+
+2. Install this VS Code extension
+   You're already here! Install from VS Code marketplace or extensions panel
+
+3. Install Claude Code CLI
    `npm install -g @anthropic-ai/claude-code`
-2. Install Fronti extensions
-   - Chrome: [Fronti Chrome Extension](https://chromewebstore.google.com/detail/visual-editor-ai/jojjbmgmggenijlkhjeaiodfoggjcjgj)
-   - VS Code: This extension
-3. Prepare your project
-   - Open the repo in VS Code.
-   - Start your local development server (for example `npm run dev` -> `http://localhost:3000` or `5173`).
-4. Run Claude from the canvas
-   - Launch the Chrome extension, pick an element or section, describe the improvement, and let Claude Code apply and sync the changes.
+
+4. Start your project
+   - Start your local development server (e.g., `npm run dev` → `http://localhost:3000`)
+
+5. Edit visually
+   - Launch the Chrome extension, select an element, describe the change, and let Claude apply it to your codebase
 
 ---
 
@@ -48,7 +52,7 @@ Get the speed of hosted AI tools with complete control over your codebase.
 ## How it works
 
 - The Chrome extension provides a visual interface over your localhost dev server
-- The VS Code extension connects your selections to Claude Code CLI running in your editor
+- This VS Code extension bridges Fronti chrome extension to Claude Code CLI
 - Claude executes changes locally in your codebase
 
 ---
@@ -63,15 +67,13 @@ Get the speed of hosted AI tools with complete control over your codebase.
 
 ## Requirements
 
-- Node.js 18 or newer
-- Visual Studio Code
 - Claude Code CLI (`npm install -g @anthropic-ai/claude-code`)
 - This VS Code Extension
-- Fronti Chrome Extension
+- [Fronti Chrome Extension](https://chromewebstore.google.com/detail/visual-editor-ai/jojjbmgmggenijlkhjeaiodfoggjcjgj)
 - Chromium-based browser (Chrome, Edge, Arc, etc.)
 - Local dev server running your project
 
-All Claude requests run through Claude Code CLI, which requires an active Anthropic subscription.
+All requests run through Claude Code CLI, which requires an active Anthropic subscription.
 
 ---
 

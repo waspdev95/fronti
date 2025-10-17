@@ -1,8 +1,10 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Send, MousePointer2 } from 'lucide-react';
+import { Send, MousePointer2, Settings as SettingsIcon } from 'lucide-react';
+import * as Popover from '@radix-ui/react-popover';
 import { useAppStore } from '../store';
 import { useSettings } from '../hooks/useSettings';
 import { Tooltip } from './Tooltip';
+import { Settings } from './Settings';
 import { getElementDisplayText } from '../utils/element-display';
 import { useClaudeStream } from '../hooks/useClaudeStream';
 import { useTaskManager } from '../hooks/useTaskManager';
@@ -22,8 +24,6 @@ export const ChatInput = () => {
     selectedElements,
     command,
     setCommand,
-    setElementTaskState,
-    removeElementTask,
     isStreaming,
     setIsStreaming,
     currentSessionId,
@@ -51,6 +51,14 @@ export const ChatInput = () => {
 
   const { settings } = useSettings();
   const { tasks, setTasks } = useTaskManager();
+
+  // Get short project path (last folder name)
+  const getShortProjectPath = () => {
+    if (!settings.projectPath) return '';
+    const path = settings.projectPath.trim();
+    const parts = path.split(/[\\/]/).filter(p => p.length > 0);
+    return parts.length > 0 ? `\\${parts[parts.length - 1]}` : '';
+  };
 
   // Load sessions on mount
   useEffect(() => {
@@ -107,9 +115,6 @@ export const ChatInput = () => {
   // Store handlers in a ref to avoid re-adding listeners
   const handlersRef = useRef({
     setIsStreaming,
-    selectedElements,
-    setElementTaskState,
-    removeElementTask,
     addAssistantMessage,
     addToolMessage,
     getNextQueueItem,
@@ -122,9 +127,6 @@ export const ChatInput = () => {
   useEffect(() => {
     handlersRef.current = {
       setIsStreaming,
-      selectedElements,
-      setElementTaskState,
-      removeElementTask,
       addAssistantMessage,
       addToolMessage,
       getNextQueueItem,
@@ -144,6 +146,7 @@ export const ChatInput = () => {
   );
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Enter to submit
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(e as any);
@@ -222,10 +225,6 @@ Task: ${augmentedCommand}`;
     // Check if this is the first message of the session
     const isFirstMessage = getIsFirstMessage();
 
-    taskSelectedElements.forEach(info => {
-      setElementTaskState(info.element, 'loading');
-    });
-
     chrome.runtime.sendMessage(
       {
         type: 'EXECUTE_CLAUDE',
@@ -253,6 +252,25 @@ Task: ${augmentedCommand}`;
       detail: { content, selectedElements, placeholder, iframeUrl }
     });
     window.dispatchEvent(event);
+  };
+
+  const handleStop = () => {
+    // Stop the streaming
+    setIsStreaming(false);
+
+    // Save the partial response as assistant message if there's content
+    if (streamingTextRef.current) {
+      addAssistantMessage(streamingTextRef.current);
+    }
+
+    // Reset streaming state
+    streamingTextRef.current = '';
+    setStreamingText('');
+    toolInputRef.current = '';
+    currentBlockRef.current = null;
+
+    // Send stop message to background script
+    chrome.runtime.sendMessage({ type: 'STOP_STREAM' });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -300,6 +318,46 @@ Task: ${augmentedCommand}`;
       element.scrollTop = element.scrollHeight;
     }
   }, [streamingText, messages]);
+
+  // Listen for stop-streaming event from keyboard shortcut
+  useEffect(() => {
+    const handleStopEvent = () => {
+      if (isStreaming) {
+        handleStop();
+      }
+    };
+
+    window.addEventListener('stop-streaming', handleStopEvent);
+    return () => window.removeEventListener('stop-streaming', handleStopEvent);
+  }, [isStreaming]);
+
+  // Handle page refresh/close while streaming
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isStreaming) {
+        // Show confirmation dialog (don't stop stream yet)
+        e.preventDefault();
+        e.returnValue = 'An AI operation is in progress. Are you sure you want to leave?';
+        return e.returnValue;
+      }
+    };
+
+    const handleUnload = () => {
+      // Only stop stream if user actually leaves the page
+      if (isStreaming) {
+        chrome.runtime.sendMessage({ type: 'STOP_STREAM' });
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('unload', handleUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('unload', handleUnload);
+    };
+  }, [isStreaming]);
+
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col h-full gap-3 overflow-hidden">
@@ -391,6 +449,13 @@ Task: ${augmentedCommand}`;
             )
           )}
 
+          {/* ESC to cancel hint - shown when streaming */}
+          {isStreaming && (
+            <div className="flex items-center text-xs text-gray-500">
+              <span>Press ESC to cancel</span>
+            </div>
+          )}
+
           <div className="p-3 z-20 relative rounded-xl overflow-visible bg-white border border-gray-300 focus-within:border-gray-500 shadow-sm transition-[border-color,box-shadow] duration-200">
         {/* Textarea */}
         <div className="w-full pb-2">
@@ -425,11 +490,34 @@ Task: ${augmentedCommand}`;
                 <span className="hidden sm:inline">Inspector</span>
               </button>
             </Tooltip>
+
+            {/* Settings Popover */}
+            <Popover.Root>
+              <Popover.Trigger asChild>
+                <button
+                  type="button"
+                  className="inline-flex shrink-0 cursor-pointer items-center justify-center gap-1.5 border font-medium transition px-2 text-sm h-7 rounded-md border-transparent bg-transparent text-gray-900 hover:bg-gray-100"
+                >
+                  <SettingsIcon size={16} />
+                  <span className="hidden sm:inline">{getShortProjectPath()}</span>
+                </button>
+              </Popover.Trigger>
+              <Popover.Portal>
+                <Popover.Content
+                  align="start"
+                  side="top"
+                  sideOffset={8}
+                  className="bg-white border border-gray-200 rounded-lg shadow-lg p-4 w-[360px] max-h-[600px] overflow-y-auto z-[1000] animate-in fade-in-0 zoom-in-95"
+                >
+                  <Settings />
+                </Popover.Content>
+              </Popover.Portal>
+            </Popover.Root>
           </div>
 
           {/* Right side buttons */}
           <div className="ml-auto flex items-center gap-0.5 sm:gap-1">
-            {/* Send button */}
+            {/* Send button - always visible */}
             <Tooltip content={isStreaming ? "Add to queue (Enter)" : "Send (Enter)"} side="top">
               <button
                 type="submit"

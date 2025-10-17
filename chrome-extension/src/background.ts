@@ -8,7 +8,8 @@ import {
   checkNativeHost,
   checkClaudeCode,
   checkAll,
-  cleanupAllPorts
+  cleanupAllPorts,
+  stopStream
 } from './services/native-messaging';
 
 // Listen for extension suspend/shutdown
@@ -45,6 +46,12 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     case 'CHECK_ALL': {
       checkAll(sendResponse);
       return true; // Async response
+    }
+
+    case 'STOP_STREAM': {
+      stopStream();
+      sendResponse({ success: true });
+      return true;
     }
 
     default:

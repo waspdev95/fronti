@@ -1,6 +1,0 @@
-{
-  "name": "ai-visual-editor-native-host",
-  "version": "1.0.0",
-  "type": "module",
-  "main": "host.js"
-}

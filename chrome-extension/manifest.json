@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Fronti AI",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "Visual-first AI coding agent for local codebases. Select elements in browser, describe changes, agent applies edits.",
   "icons": {
     "16": "icon16.png",

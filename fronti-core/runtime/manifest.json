@@ -1,0 +1,10 @@
+{
+  "name": "com.fronti.core",
+  "description": "Fronti Core - Bridge component for browser, VS Code, and Claude Code",
+  "path": "C:\\Users\\zafer\\Desktop\\visualeditor\\fronti-core\\runtime\\host.bat",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://fjidllehmalodkbffegpihbcfolplneg/",
+    "chrome-extension://jojjbmgmggenijlkhjeaiodfoggjcjgj/"
+  ]
+}

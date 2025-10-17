@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { CheckCircle, Circle, Loader, ExternalLink } from 'lucide-react';
+import { CheckCircle, Circle, Loader, ExternalLink, Terminal } from 'lucide-react';
 import { checkAll } from '../utils/nativeHostCheck';
 
 interface OnboardingProps {
@@ -8,7 +8,7 @@ interface OnboardingProps {
 
 enum OnboardingStep {
   CHECKING,
-  INSTALL_VSC,
+  INSTALL_CORE,
   INSTALL_CLAUDE,
   PROJECT_SETUP,
   COMPLETED
@@ -16,13 +16,14 @@ enum OnboardingStep {
 
 export const Onboarding = ({ onComplete }: OnboardingProps) => {
   const [currentStep, setCurrentStep] = useState<OnboardingStep>(OnboardingStep.CHECKING);
-  const [vscInstalled, setVscInstalled] = useState(false);
+  const [coreInstalled, setCoreInstalled] = useState(false);
   const [claudeInstalled, setClaudeInstalled] = useState(false);
   const [projectPath, setProjectPath] = useState('');
   const [localhostUrl, setLocalhostUrl] = useState('http://localhost:3000');
   const [checking, setChecking] = useState(true);
-  const [vscError, setVscError] = useState<string>('');
+  const [coreError, setCoreError] = useState<string>('');
   const [claudeError, setClaudeError] = useState<string>('');
+  const [copiedNpm, setCopiedNpm] = useState(false);
 
   useEffect(() => {
     checkEverything();
@@ -35,14 +36,14 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
     const result = await checkAll();
     console.log('[Onboarding] Check result:', result);
 
-    // Check VS Code Extension
+    // Check @fronti/core (native host)
     if (result.vscExtension.installed) {
-      setVscInstalled(true);
-      setVscError('');
+      setCoreInstalled(true);
+      setCoreError('');
     } else {
-      setVscInstalled(false);
-      setVscError(result.vscExtension.error || 'Native host not found');
-      console.error('[Onboarding] VS Code check failed:', result.vscExtension.error);
+      setCoreInstalled(false);
+      setCoreError(result.vscExtension.error || 'Native host not found');
+      console.error('[Onboarding] Native host check failed:', result.vscExtension.error);
     }
 
     // Check Claude Code
@@ -54,7 +55,7 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
       setClaudeError(result.claudeCode.error || 'Claude Code not found');
     }
 
-    // VSC extension'dan proje yolunu al - otomatik doldur
+    // Get project path from native host - auto-fill
     if (result.projectPath) {
       setProjectPath(result.projectPath);
       console.log('[Onboarding] Auto-filled project path:', result.projectPath);
@@ -62,7 +63,7 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
 
     // Determine next step
     if (!result.vscExtension.installed) {
-      setCurrentStep(OnboardingStep.INSTALL_VSC);
+      setCurrentStep(OnboardingStep.INSTALL_CORE);
     } else if (!result.claudeCode.installed) {
       setCurrentStep(OnboardingStep.INSTALL_CLAUDE);
     } else {
@@ -72,8 +73,10 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
     setChecking(false);
   };
 
-  const handleInstallVscClick = () => {
-    window.open('https://marketplace.visualstudio.com/items?itemName=VisualEditor.visual-editor-ai', '_blank');
+  const handleCopyNpmCommand = () => {
+    navigator.clipboard.writeText('npm install -g @fronti/core');
+    setCopiedNpm(true);
+    setTimeout(() => setCopiedNpm(false), 2000);
   };
 
   const handleRecheck = () => {
@@ -107,40 +110,45 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
           Welcome to Fronti
         </h1>
         <p className="m-0 mb-12 text-gray-600 text-[0.9375rem]">
-          Let's get you set up in a few simple steps
+          Let&apos;s get you set up in a few simple steps
         </p>
 
         <div className="flex flex-col gap-8">
-          {/* Step 1: VS Code Extension */}
-          <div className={`transition-opacity duration-200 ${vscInstalled ? 'opacity-40' : ''}`}>
+          {/* Step 1: npm package installation */}
+          <div className={`transition-opacity duration-200 ${coreInstalled ? 'opacity-40' : ''}`}>
             <div className="flex gap-3 items-start">
-              {getStepIcon(vscInstalled, currentStep === OnboardingStep.CHECKING || currentStep === OnboardingStep.INSTALL_VSC)}
+              {getStepIcon(coreInstalled, currentStep === OnboardingStep.CHECKING || currentStep === OnboardingStep.INSTALL_CORE)}
               <div className="flex-1">
                 <h3 className="m-0 mb-1 text-[0.9375rem] font-medium text-black">
-                  Setup Required
+                  Install Fronti Core
                 </h3>
-                {currentStep === OnboardingStep.CHECKING && !vscInstalled && (
+                {currentStep === OnboardingStep.CHECKING && !coreInstalled && (
                   <p className="m-0 text-gray-600 text-sm">Checking...</p>
                 )}
-                {currentStep === OnboardingStep.INSTALL_VSC && (
+                {currentStep === OnboardingStep.INSTALL_CORE && (
                   <div className="mt-4">
-                    <p className="m-0 mb-4 text-gray-600 text-sm">Install Fronti VS Code extension to connect</p>
-                    <button
-                      onClick={handleInstallVscClick}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium cursor-pointer transition-opacity bg-black text-white border border-black hover:opacity-80 mr-2"
-                    >
-                      <ExternalLink size={14} />
-                      Open VS Code Extensions
-                    </button>
+                    <p className="m-0 mb-3 text-gray-600 text-sm">Run this command in your terminal to install the bridge:</p>
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="flex-1 flex items-center gap-2 px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-md font-mono text-sm">
+                        <Terminal size={16} className="text-gray-400 flex-shrink-0" />
+                        <code className="flex-1 text-black">npm install -g @fronti/core</code>
+                      </div>
+                      <button
+                        onClick={handleCopyNpmCommand}
+                        className="px-3 py-2.5 rounded-md text-sm font-medium cursor-pointer transition-colors bg-white text-black border border-gray-200 hover:bg-gray-50 flex-shrink-0"
+                      >
+                        {copiedNpm ? 'Copied!' : 'Copy'}
+                      </button>
+                    </div>
                     <button
                       onClick={handleRecheck}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium cursor-pointer transition-colors bg-white text-black border border-gray-200 hover:bg-gray-50"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium cursor-pointer transition-opacity bg-black text-white border border-black hover:opacity-80"
                     >
                       Check Again
                     </button>
                   </div>
                 )}
-                {vscInstalled && <p className="m-0 text-gray-600 text-sm">Installed and ready</p>}
+                {coreInstalled && <p className="m-0 text-gray-600 text-sm">Installed and ready</p>}
               </div>
             </div>
           </div>
@@ -151,7 +159,7 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
               {getStepIcon(claudeInstalled, currentStep === OnboardingStep.CHECKING || currentStep === OnboardingStep.INSTALL_CLAUDE)}
               <div className="flex-1">
                 <h3 className="m-0 mb-1 text-[0.9375rem] font-medium text-black">
-                  AI Engine
+                  Claude Code
                 </h3>
                 {currentStep === OnboardingStep.CHECKING && !claudeInstalled && (
                   <p className="m-0 text-gray-600 text-sm">Checking...</p>

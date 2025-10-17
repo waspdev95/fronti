@@ -11,12 +11,6 @@ export interface ElementInfo {
   css: string;
 }
 
-export interface ElementTaskState {
-  element: HTMLElement;
-  state: 'loading' | 'success' | 'error';
-  timestamp: number;
-}
-
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant' | 'tool';
@@ -70,7 +64,6 @@ export interface PlaceholderInfo {
 interface AppState {
   selectedElements: ElementInfo[];
   selectorMode: boolean;
-  elementTasks: ElementTaskState[];
   command: string;
   isStreaming: boolean;
   currentSessionId: string | null;
@@ -83,8 +76,6 @@ interface AppState {
   removeSelectedElementByIndex: (index: number) => void;
   clearSelectedElements: () => void;
   toggleSelectorMode: () => void;
-  setElementTaskState: (element: HTMLElement, state: 'loading' | 'success' | 'error') => void;
-  removeElementTask: (element: HTMLElement) => void;
   setCommand: (command: string) => void;
   setIsStreaming: (streaming: boolean) => void;
   startNewSession: () => void;
@@ -121,7 +112,6 @@ function generateUUID(): string {
 export const useAppStore = create<AppState>((set, get) => ({
   selectedElements: [],
   selectorMode: false,
-  elementTasks: [],
   command: '',
   isStreaming: false,
   currentSessionId: null,
@@ -149,28 +139,6 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   toggleSelectorMode: () =>
     set((state) => ({ selectorMode: !state.selectorMode })),
-
-  setElementTaskState: (element, state) =>
-    set((store) => {
-      const existing = store.elementTasks.find(t => t.element === element);
-      if (existing) {
-        return {
-          elementTasks: store.elementTasks.map(t =>
-            t.element === element
-              ? { ...t, state, timestamp: Date.now() }
-              : t
-          )
-        };
-      }
-      return {
-        elementTasks: [...store.elementTasks, { element, state, timestamp: Date.now() }]
-      };
-    }),
-
-  removeElementTask: (element) =>
-    set((store) => ({
-      elementTasks: store.elementTasks.filter(t => t.element !== element)
-    })),
 
   setCommand: (command) =>
     set({ command }),
