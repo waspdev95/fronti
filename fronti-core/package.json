@@ -1,6 +1,6 @@
 {
   "name": "@fronti/core",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Visual-first AI coding agent for local codebases. Select elements in browser, describe changes, agent applies edits.",
   "type": "commonjs",
   "main": "dist/index.js",

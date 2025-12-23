@@ -3,7 +3,7 @@ import * as path from 'path';
 import type { Platform } from './types';
 
 const HOST_JS_CONTENT = `#!/usr/bin/env node
-const { runNativeHost } = require('@fronti/native-host');
+const { runNativeHost } = require('@fronti/core');
 
 runNativeHost();
 `;
