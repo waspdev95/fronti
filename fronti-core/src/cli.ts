@@ -60,7 +60,7 @@ async function runCli(): Promise<void> {
           .option('extensions', {
             type: 'array',
             description: 'Allowed Chrome extension IDs',
-            default: ['fjidllehmalodkbffegpihbcfolplneg', 'jojjbmgmggenijlkhjeaiodfoggjcjgj']
+            default: ['jojjbmgmggenijlkhjeaiodfoggjcjgj']
           }),
       (args) => {
         const runtimeDir = args['runtime-dir'] as string;
@@ -80,7 +80,7 @@ async function runCli(): Promise<void> {
           })
           .option('extensions', {
             type: 'array',
-            default: ['fjidllehmalodkbffegpihbcfolplneg', 'jojjbmgmggenijlkhjeaiodfoggjcjgj']
+            default: ['jojjbmgmggenijlkhjeaiodfoggjcjgj']
           }),
       (args) => {
         const runtimeDir = args['runtime-dir'] as string;

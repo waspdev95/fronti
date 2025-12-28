@@ -8,10 +8,7 @@ import {
 } from '@fronti/core';
 import type { Platform } from '@fronti/core';
 
-const ALLOWED_EXTENSION_IDS = [
-  'fjidllehmalodkbffegpihbcfolplneg',
-  'jojjbmgmggenijlkhjeaiodfoggjcjgj'
-];
+const ALLOWED_EXTENSION_IDS = ['jojjbmgmggenijlkhjeaiodfoggjcjgj'];
 
 function manifestLooksValid(manifestPath: string | null): boolean {
   if (!manifestPath) {

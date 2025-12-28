@@ -15,7 +15,7 @@ export function createManifest(
   const extensionIds =
     allowedExtensionIds && allowedExtensionIds.length > 0
       ? allowedExtensionIds
-      : ['fjidllehmalodkbffegpihbcfolplneg', 'jojjbmgmggenijlkhjeaiodfoggjcjgj'];
+      : ['jojjbmgmggenijlkhjeaiodfoggjcjgj'];
 
   return {
     name: NATIVE_HOST_NAME,

@@ -1,4 +1,4 @@
 #!/usr/bin/env node
-const { runNativeHost } = require('@fronti/native-host');
+const { runNativeHost } = require('../dist/index.js');
 
 runNativeHost();
