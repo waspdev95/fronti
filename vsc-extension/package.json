@@ -2,7 +2,7 @@
   "name": "visual-editor-ai",
   "displayName": "Fronti AI",
   "description": "Visual-first AI coding agent for local codebases. Select elements in browser, describe changes, agent applies edits.",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "publisher": "VisualEditor",
   "icon": "resources/icon.png",
   "engines": {
@@ -44,7 +44,7 @@
     "package": "vsce package"
   },
   "dependencies": {
-    "@fronti/core": "file:../fronti-core/fronti-core-1.0.0.tgz"
+    "@fronti/core": "^1.0.6"
   },
   "devDependencies": {
     "@types/node": "^20.19.19",

@@ -4,6 +4,7 @@ export interface NativeHostManifest {
   path: string;
   type: 'stdio';
   allowed_origins: string[];
+  version: string;
 }
 
 export type Platform = 'win32' | 'darwin' | 'linux';

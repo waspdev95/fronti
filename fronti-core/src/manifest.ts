@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { NATIVE_HOST_NAME, NATIVE_HOST_FILES } from './constants';
+import { NATIVE_HOST_NAME, NATIVE_HOST_FILES, NATIVE_HOST_VERSION } from './constants';
 import type { NativeHostManifest, Platform } from './types';
 
 export function createManifest(
@@ -22,6 +22,7 @@ export function createManifest(
     description: 'Fronti Core - Bridge component for browser, VS Code, and Claude Code',
     path: hostExecutable,
     type: 'stdio',
-    allowed_origins: extensionIds.map((id) => `chrome-extension://${id}/`)
+    allowed_origins: extensionIds.map((id) => `chrome-extension://${id}/`),
+    version: NATIVE_HOST_VERSION
   };
 }
