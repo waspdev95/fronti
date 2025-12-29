@@ -1,51 +1,49 @@
-import * as fs from 'fs';
-import * as path from 'path';
 import * as vscode from 'vscode';
 import {
   getDefaultRuntimeDir,
-  getRegisteredManifestPath,
-  installNativeHostRuntime
+  smartInstall,
+  isInstallNeeded,
+  NATIVE_HOST_VERSION
 } from '@fronti/core';
 import type { Platform } from '@fronti/core';
 
 const ALLOWED_EXTENSION_IDS = ['jojjbmgmggenijlkhjeaiodfoggjcjgj'];
 
-function manifestLooksValid(manifestPath: string | null): boolean {
-  if (!manifestPath) {
-    return false;
-  }
-
-  try {
-    return fs.existsSync(manifestPath);
-  } catch {
-    return false;
-  }
-}
-
+/**
+ * Ensures the native host is installed.
+ * Uses smart installation that:
+ * - Checks if already installed and up-to-date
+ * - Only installs/updates if needed
+ * - Uses a fixed system location (~/.fronti/native-host)
+ */
 export async function ensureNativeHostInstalled(): Promise<void> {
   const platform = process.platform as Platform;
 
   try {
-    const existingManifest = getRegisteredManifestPath(platform);
-    if (manifestLooksValid(existingManifest)) {
+    // Check if installation is needed
+    if (!isInstallNeeded(platform)) {
+      console.log(`[Fronti] Native host already installed (v${NATIVE_HOST_VERSION})`);
       return;
     }
-  } catch (error) {
-    console.error('[Fronti] Failed to read native host registration:', error);
-  }
 
-  try {
+    // Install or update
     const runtimeDir = getDefaultRuntimeDir();
-    installNativeHostRuntime({
+    const result = smartInstall({
       nativeHostPath: runtimeDir,
       platform,
       allowedExtensionIds: ALLOWED_EXTENSION_IDS
     });
-    console.log('[Fronti] Native host installed at', path.join(runtimeDir, 'manifest.json'));
+
+    if (result.usedExisting) {
+      console.log(`[Fronti] Native host verified (v${NATIVE_HOST_VERSION})`);
+    } else {
+      console.log(`[Fronti] Native host installed (v${NATIVE_HOST_VERSION})`);
+      console.log(`[Fronti] Manifest: ${result.manifestPath}`);
+    }
   } catch (error) {
     console.error('[Fronti] Native host installation failed:', error);
     void vscode.window.showErrorMessage(
-      'Fronti: Core component could not be installed automatically. Run "fronti-core install" from a terminal.',
+      'Fronti: Core component could not be installed automatically. Run "npm install -g @fronti/core" from a terminal.',
       { modal: false }
     );
   }

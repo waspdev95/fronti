@@ -1,6 +1,8 @@
 export { runNativeHost, terminateActiveProcesses } from './run';
 export {
   installNativeHostRuntime,
+  smartInstall,
+  isInstallNeeded,
   uninstallNativeHost,
   getRegisteredManifestPath,
   readManifestExecutable,
