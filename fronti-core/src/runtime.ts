@@ -14,36 +14,43 @@ runNativeHost();
 
 /**
  * Windows batch file - dynamically finds Node.js
- * Priority: 1) Common install paths, 2) PATH lookup
+ * Priority: 1) PATH lookup, 2) Common install paths
  */
 function buildHostBat(): string {
   return `@echo off
-setlocal enabledelayedexpansion
 
-REM Try common Node.js installation paths first
-set "NODE_PATHS=C:\\Program Files\\nodejs\\node.exe;C:\\Program Files (x86)\\nodejs\\node.exe;%LOCALAPPDATA%\\Programs\\nodejs\\node.exe;%APPDATA%\\nvm\\current\\node.exe"
-
-for %%p in (%NODE_PATHS%) do (
-  if exist "%%p" (
-    set "NODE_BIN=%%p"
-    goto :found
-  )
-)
-
-REM Fall back to PATH lookup
+REM First try PATH lookup (most reliable)
 where node >nul 2>&1
 if %ERRORLEVEL% equ 0 (
   for /f "delims=" %%i in ('where node') do (
-    set "NODE_BIN=%%i"
-    goto :found
+    "%%i" "%~dp0host.js" %*
+    exit /b %ERRORLEVEL%
   )
+)
+
+REM Try common Node.js installation paths
+if exist "C:\\Program Files\\nodejs\\node.exe" (
+  "C:\\Program Files\\nodejs\\node.exe" "%~dp0host.js" %*
+  exit /b %ERRORLEVEL%
+)
+
+if exist "%LOCALAPPDATA%\\Programs\\nodejs\\node.exe" (
+  "%LOCALAPPDATA%\\Programs\\nodejs\\node.exe" "%~dp0host.js" %*
+  exit /b %ERRORLEVEL%
+)
+
+if exist "%APPDATA%\\nvm\\current\\node.exe" (
+  "%APPDATA%\\nvm\\current\\node.exe" "%~dp0host.js" %*
+  exit /b %ERRORLEVEL%
+)
+
+if exist "C:\\Program Files (x86)\\nodejs\\node.exe" (
+  "C:\\Program Files (x86)\\nodejs\\node.exe" "%~dp0host.js" %*
+  exit /b %ERRORLEVEL%
 )
 
 echo Fronti: Node.js not found. Please install Node.js 18+ >&2
 exit /b 1
-
-:found
-"%NODE_BIN%" "%~dp0host.js" %*
 `;
 }
 
