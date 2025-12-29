@@ -1,4 +1,4 @@
-import { spawn, type ChildProcessWithoutNullStreams } from 'child_process';
+import { spawn, execSync, type ChildProcessWithoutNullStreams } from 'child_process';
 import { readSync, readFileSync, existsSync } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
@@ -8,6 +8,56 @@ const CONFIG_DIR = '.ai-visual-editor';
 const WORKSPACE_CONFIG_FILE = 'workspace.json';
 const MESSAGE_HEADER_SIZE = 4;
 const CLAUDE_COMMAND_TIMEOUT = 5000;
+
+/**
+ * Common paths where Claude CLI might be installed.
+ * Chrome's native messaging hosts run with a limited PATH,
+ * so we need to check known locations.
+ */
+const CLAUDE_KNOWN_PATHS = [
+  join(homedir(), '.npm-global', 'bin', 'claude'),
+  join(homedir(), '.local', 'bin', 'claude'),
+  join(homedir(), '.nvm', 'current', 'bin', 'claude'),
+  '/usr/local/bin/claude',
+  '/opt/node22/bin/claude',
+  '/opt/homebrew/bin/claude',
+  '/usr/bin/claude',
+];
+
+let cachedClaudePath: string | null = null;
+
+/**
+ * Find the Claude CLI executable path.
+ * First tries 'which claude', then checks known paths.
+ */
+function findClaudePath(): string | null {
+  if (cachedClaudePath) return cachedClaudePath;
+
+  // Try 'which claude' first (works if PATH is correct)
+  try {
+    const result = execSync('which claude', {
+      encoding: 'utf8',
+      timeout: 2000,
+      stdio: ['pipe', 'pipe', 'ignore']
+    }).trim();
+    if (result && existsSync(result)) {
+      cachedClaudePath = result;
+      return result;
+    }
+  } catch {
+    // which failed, try known paths
+  }
+
+  // Check known installation paths
+  for (const p of CLAUDE_KNOWN_PATHS) {
+    if (existsSync(p)) {
+      cachedClaudePath = p;
+      return p;
+    }
+  }
+
+  return null;
+}
 
 const activeProcesses = new Set<ChildProcessWithoutNullStreams>();
 let isShuttingDown = false;
@@ -147,14 +197,24 @@ async function executeClaude(
 ): Promise<void> {
   const claudeArgs = buildClaudeArgs(toolPermissions, sessionId, isFirstMessage);
 
+  const claudePath = findClaudePath();
+  if (!claudePath) {
+    sendMessage({
+      type: 'error',
+      error: "Claude CLI not found. Please install Claude Code CLI (npm install -g @anthropic-ai/claude-code)."
+    });
+    return Promise.resolve();
+  }
+
   logInfo('Executing Claude command');
+  logInfo(`Claude path: ${claudePath}`);
   logInfo(`Working directory: ${projectPath || process.cwd()}`);
   logInfo(`Prompt length: ${prompt.length} characters`);
 
   return new Promise((resolve, reject) => {
-    const claude = spawn('claude', claudeArgs, {
+    const claude = spawn(claudePath, claudeArgs, {
       cwd: projectPath || undefined,
-      shell: true
+      shell: false
     });
 
     activeProcesses.add(claude);
@@ -249,17 +309,19 @@ async function checkClaudeCode(): Promise<void> {
   let claudeInstalled = false;
   let claudeVersion: string | null = null;
 
-  try {
-    const { execSync } = await import('child_process');
-    const output = execSync('claude --version', {
-      encoding: 'utf8',
-      timeout: CLAUDE_COMMAND_TIMEOUT,
-      stdio: 'pipe'
-    });
-    claudeInstalled = true;
-    claudeVersion = output.trim();
-  } catch {
-    claudeInstalled = false;
+  const claudePath = findClaudePath();
+  if (claudePath) {
+    try {
+      const output = execSync(`${claudePath} --version`, {
+        encoding: 'utf8',
+        timeout: CLAUDE_COMMAND_TIMEOUT,
+        stdio: 'pipe'
+      });
+      claudeInstalled = true;
+      claudeVersion = output.trim();
+    } catch {
+      claudeInstalled = false;
+    }
   }
 
   sendMessage({
@@ -275,17 +337,19 @@ async function checkAll(): Promise<void> {
   let claudeInstalled = false;
   let claudeVersion: string | null = null;
 
-  try {
-    const { execSync } = await import('child_process');
-    const output = execSync('claude --version', {
-      encoding: 'utf8',
-      timeout: CLAUDE_COMMAND_TIMEOUT,
-      stdio: 'pipe'
-    });
-    claudeInstalled = true;
-    claudeVersion = output.trim();
-  } catch {
-    claudeInstalled = false;
+  const claudePath = findClaudePath();
+  if (claudePath) {
+    try {
+      const output = execSync(`${claudePath} --version`, {
+        encoding: 'utf8',
+        timeout: CLAUDE_COMMAND_TIMEOUT,
+        stdio: 'pipe'
+      });
+      claudeInstalled = true;
+      claudeVersion = output.trim();
+    } catch {
+      claudeInstalled = false;
+    }
   }
 
   const projectPath = getWorkspacePath();
