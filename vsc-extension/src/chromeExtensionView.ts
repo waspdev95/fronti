@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
  * Webview provider for Chrome Extension setup instructions
  */
 export class ChromeExtensionProvider implements vscode.WebviewViewProvider {
-  public static readonly viewType = 'visualEditorAI.chromeExtension';
+  public static readonly viewType = 'FrontiAI.chromeExtension';
 
   constructor(private readonly _extensionUri: vscode.Uri) {}
 

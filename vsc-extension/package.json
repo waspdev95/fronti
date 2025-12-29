@@ -2,7 +2,7 @@
   "name": "visual-editor-ai",
   "displayName": "Fronti AI",
   "description": "Visual-first AI coding agent for local codebases. Select elements in browser, describe changes, agent applies edits.",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "publisher": "VisualEditor",
   "icon": "resources/icon.png",
   "engines": {
