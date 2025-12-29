@@ -38,8 +38,7 @@ export function unregisterNativeHost(platform: Platform): void {
 }
 
 function registerWindows(manifestPath: string): void {
-  const regPath = REGISTRY_PATHS.windows;
-  execSync(`reg add "${regPath}" /ve /t REG_SZ /d "${manifestPath}" /f`, {
+  execSync(`reg add "${REGISTRY_PATHS.win32}" /ve /t REG_SZ /d "${manifestPath}" /f`, {
     encoding: 'utf8',
     timeout: 5000,
     windowsHide: true
@@ -63,9 +62,8 @@ function registerLinux(manifestPath: string): void {
 }
 
 function unregisterWindows(): void {
-  const regPath = REGISTRY_PATHS.windows;
   try {
-    execSync(`reg delete "${regPath}" /f`, {
+    execSync(`reg delete "${REGISTRY_PATHS.win32}" /f`, {
       timeout: 2000,
       windowsHide: true,
       stdio: 'ignore'

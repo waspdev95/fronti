@@ -5,7 +5,7 @@ import { execSync } from 'child_process';
 import { createManifest } from './manifest';
 import { registerNativeHost, unregisterNativeHost } from './registry';
 import { ensureRuntimeFiles } from './runtime';
-import { NATIVE_HOST_NAME, REGISTRY_PATHS, CONFIG_DIR_NAME, NATIVE_HOST_DIR_NAME, NATIVE_HOST_VERSION } from './constants';
+import { NATIVE_HOST_NAME, REGISTRY_PATHS, CONFIG_DIR, NATIVE_HOST_DIR, NATIVE_HOST_VERSION } from './constants';
 import type { InstallOptions, InstallResult, Platform } from './types';
 
 /**
@@ -14,7 +14,7 @@ import type { InstallOptions, InstallResult, Platform } from './types';
  * Location: ~/.fronti/native-host/
  */
 export function getDefaultRuntimeDir(): string {
-  return path.join(os.homedir(), CONFIG_DIR_NAME, NATIVE_HOST_DIR_NAME);
+  return path.join(os.homedir(), CONFIG_DIR, NATIVE_HOST_DIR);
 }
 
 /**
@@ -154,7 +154,7 @@ export function getRegisteredManifestPath(platform: Platform): string | null {
   try {
     switch (platform) {
       case 'win32': {
-        const output = execSync(`reg query "${REGISTRY_PATHS.windows}" /ve`, {
+        const output = execSync(`reg query "${REGISTRY_PATHS.win32}" /ve`, {
           encoding: 'utf8',
           stdio: ['pipe', 'pipe', 'ignore']
         });

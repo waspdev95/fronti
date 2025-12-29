@@ -88,8 +88,6 @@ All Claude requests run through Claude Code CLI, which requires an active Anthro
 
 ## Development
 
-Build each extension independently when working from source.
-
 ### Chrome extension
 
 ```bash
@@ -100,16 +98,14 @@ npm run build
 
 Load the unpacked extension from `chrome-extension/dist` in Chrome.
 
-### VS Code extension
+### Fronti Core
 
 ```bash
-cd vsc-extension
+cd fronti-core
 npm install
-npm run compile
-npm run package  # Outputs visual-editor-ai-<version>.vsix in vsc-extension/
+npm run build
+node dist/cli.js install
 ```
-
-Install the generated `.vsix` in VS Code (Extensions panel -> ... -> Install from VSIX).
 
 ---
 

@@ -43,8 +43,5 @@ lerna-debug.log*
 chrome-extension/dist/
 chrome-extension/.crx
 
-# VS Code extension
-vsc-extension/dist/
-
 # Native host manifest (generated dynamically per user)
 fronti-core/runtime/manifest.json

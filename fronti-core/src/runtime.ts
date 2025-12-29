@@ -13,44 +13,11 @@ runNativeHost();
 `;
 
 /**
- * Windows batch file - dynamically finds Node.js
- * Priority: 1) PATH lookup, 2) Common install paths
+ * Windows batch file - simple and reliable
  */
 function buildHostBat(): string {
   return `@echo off
-
-REM First try PATH lookup (most reliable)
-where node >nul 2>&1
-if %ERRORLEVEL% equ 0 (
-  for /f "delims=" %%i in ('where node') do (
-    "%%i" "%~dp0host.js" %*
-    exit /b %ERRORLEVEL%
-  )
-)
-
-REM Try common Node.js installation paths
-if exist "C:\\Program Files\\nodejs\\node.exe" (
-  "C:\\Program Files\\nodejs\\node.exe" "%~dp0host.js" %*
-  exit /b %ERRORLEVEL%
-)
-
-if exist "%LOCALAPPDATA%\\Programs\\nodejs\\node.exe" (
-  "%LOCALAPPDATA%\\Programs\\nodejs\\node.exe" "%~dp0host.js" %*
-  exit /b %ERRORLEVEL%
-)
-
-if exist "%APPDATA%\\nvm\\current\\node.exe" (
-  "%APPDATA%\\nvm\\current\\node.exe" "%~dp0host.js" %*
-  exit /b %ERRORLEVEL%
-)
-
-if exist "C:\\Program Files (x86)\\nodejs\\node.exe" (
-  "C:\\Program Files (x86)\\nodejs\\node.exe" "%~dp0host.js" %*
-  exit /b %ERRORLEVEL%
-)
-
-echo Fronti: Node.js not found. Please install Node.js 18+ >&2
-exit /b 1
+node "%~dp0host.js" %*
 `;
 }
 
