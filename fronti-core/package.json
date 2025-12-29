@@ -13,8 +13,7 @@
   "scripts": {
     "build": "tsc -p ./tsconfig.json",
     "clean": "rimraf dist",
-    "prepare": "npm run build",
-    "postinstall": "node ./dist/cli.js auto-install || true"
+    "prepare": "npm run build && node ./dist/cli.js auto-install || true"
   },
   "keywords": [
     "fronti",
